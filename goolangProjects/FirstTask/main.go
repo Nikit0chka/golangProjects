@@ -2,110 +2,140 @@ package main
 
 import (
 	"bufio"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
+	"sync"
 	"time"
 )
 
 func main() {
-	startProg()
-}
-
-func getLogInput() (string, string) {
-	scanner := bufio.NewScanner(os.Stdin)
-	scanner.Scan()
-
-	isInputValid(scanner.Text())
-
-	return strings.Split(scanner.Text(), " ")[0], strings.Split(scanner.Text(), " ")[1]
-}
-
-func startProg() {
-	fmt.Println("Input path to file and path to directory : ")
 	pathToFile, pathToDirectory := getLogInput()
-	timer := time.Now()
-
-	WorkWithFiles(pathToFile, pathToDirectory)
-
-	elapsed := time.Since(timer)
-	fmt.Printf("Time of going : %s", elapsed)
-}
-
-func isInputValid(inputString string) bool {
-	if len(strings.Split(inputString, " ")) != 2 {
+	if !isInputValid(pathToFile, pathToDirectory) {
 		log.Fatal("Check input!")
 	}
 
-	return true
+	timer := time.Now()
+	workWithFiles(pathToFile, pathToDirectory)
+
+	fmt.Printf("Time of going : %s\n", time.Since(timer))
 }
 
-func WorkWithFiles(pathToFile string, pathToDirectory string) {
-	urls := readFile(pathToFile)
-
-	for _, url := range urls {
-		writeFile(pathToDirectory, string(getHttpRequestInfo(url)))
-	}
-}
-
-func readFile(pathToFile string) []string {
-	if isFileExist(pathToFile) {
-		content, err := ioutil.ReadFile(pathToFile)
-		if err != nil {
-			fmt.Printf("Eror by reading file by path : %s", pathToFile)
-		}
-
-		lines := strings.Split(string(content), "\n")
-		return lines
-	}
-	return nil
-}
-
-func isFileExist(pathToFile string) bool {
-	_, err := os.Stat(pathToFile)
-	if os.IsNotExist(err) {
-		log.Fatal("File by path" + pathToFile + " is not exists!")
+// workWithFiles вызывает методы чтения url из файла, отправки http запросаЯ и записи результата в файл
+func workWithFiles(pathToFile, pathToDirectory string) {
+	urls, err := getFileStrContent(pathToFile)
+	if err != nil {
+		log.Fatal(err)
 	}
 
-	return true
+	var wg sync.WaitGroup
+	for _, urlName := range urls {
+		wg.Add(1)
+
+		go func(url string) {
+			defer wg.Done()
+
+			domain, err := getDomainName(url)
+			if err != nil {
+				fmt.Print(err)
+				return
+			}
+
+			httpRequestinfo, err := getHttpRequestInfo(url)
+			if err != nil {
+				fmt.Print(err)
+				return
+			}
+
+			err = writeToFile(pathToDirectory, domain, httpRequestinfo)
+			if err != nil {
+				fmt.Print(err)
+				return
+			}
+		}(urlName)
+	}
+	wg.Wait()
 }
 
-func writeFile(pathToFile string, content string) {
-	file, err := os.OpenFile(pathToFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+// getDomainName возвращает имя домейна url из строки
+func getDomainName(urlName string) (string, error) {
+	parsedUrl, err := url.Parse(urlName)
+	if err != nil {
+		return "", fmt.Errorf("Error parsing URL: %s", err)
+	}
+	return parsedUrl.Hostname(), nil
+}
+
+// getLogInput обробатывает ввод в консоль
+func getLogInput() (string, string) {
+	var pathToFile string
+	var pathToDirectory string
+
+	flag.StringVar(&pathToFile, "pathToFile", "", "Path to file")
+	flag.StringVar(&pathToDirectory, "pathToDirectory", "", "Path to directory")
+
+	flag.Parse()
+
+	fmt.Printf("%s - path to file \n", pathToFile)
+	fmt.Printf("%s - path to directory\n", pathToDirectory)
+	return pathToFile, pathToDirectory
+}
+
+// isInputValid проверяет введеные данные
+func isInputValid(pathToFile, pathToDirectory string) bool {
+	return strings.Contains(pathToFile, ".txt") && !strings.Contains(pathToDirectory, ".txt")
+}
+
+// getFileStrContent читатет файл по пути и возвращает массив строк
+func getFileStrContent(pathToFile string) ([]string, error) {
+	content, err := ioutil.ReadFile(pathToFile)
 
 	if err != nil {
-		fmt.Println(err)
+		return nil, fmt.Errorf("Error of reading file by path : %s \n", err)
+	}
+
+	lines := strings.Split(string(content), "\n")
+	return lines, nil
+}
+
+// writeToFile записывает массив байтов в файл с именем по пути
+func writeToFile(pathToFile, fileName string, content []byte) error {
+	file, err := os.OpenFile(fmt.Sprintf("%s/%s", pathToFile, fileName), os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		return fmt.Errorf("Erorr by trying open file by path : %s\n %s \n", pathToFile, err)
 	}
 	defer file.Close()
 
 	writer := bufio.NewWriter(file)
+	_, err = writer.Write(content)
 
-	for _, value := range []byte(content) {
-		_, err = writer.WriteString(fmt.Sprint(int(value)))
-		if err != nil {
-			fmt.Println(err)
-		}
+	if err != nil {
+		return fmt.Errorf("Error by opening file by path : %s\n %s \n", pathToFile, err)
 	}
-	// _, err = writer.WriteString(content)
-
-	writer.Flush()
+	err = writer.Flush()
+	if err != nil {
+		return fmt.Errorf("Error by closing file by path : %s\n %s \n", pathToFile, err)
+	}
+	return nil
 }
 
-func getHttpRequestInfo(siteUrl string) string {
+// getHttpRequestInfo возвращает массив байтов из http запроса к сайту по url
+func getHttpRequestInfo(siteUrl string) ([]byte, error) {
 	resp, err := http.Get(strings.TrimRight(siteUrl, "\r"))
 	if err != nil {
-		fmt.Printf("Eror by try do http request to : %s %s", siteUrl, err)
+		return nil, fmt.Errorf("Eror by trying do http request to : %s\n %s \n", siteUrl, err)
 	}
+	defer resp.Body.Close()
 
 	bytesFromBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		fmt.Printf("Eror by try do http request to : %s %s", siteUrl, err)
+		return nil, fmt.Errorf("Eror by trying do http request to : %s\n %s \n", siteUrl, err)
 	}
 
-	defer resp.Body.Close()
-
-	return string(bytesFromBody)
+	return bytesFromBody, nil
 }
