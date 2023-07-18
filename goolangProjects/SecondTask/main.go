@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"sort"
@@ -62,6 +63,17 @@ func main() {
 		log.Fatal(err)
 	}
 	fmt.Printf("Time of going : %s\n", time.Since(timer))
+	createServ(sortedDirSizes)
+}
+
+func createServ(dirSizes []PathSize) {
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		for _, value := range dirSizes {
+			fmt.Fprintf(w, "%s : %f mb\n", value.Path, float32(value.Size)/1048576.0)
+		}
+	})
+
+	http.ListenAndServe(":8080", nil)
 }
 
 // getLogInput запрашивает и возвращает ввод с консоли директории, лимит размера директории, тип сортировки
