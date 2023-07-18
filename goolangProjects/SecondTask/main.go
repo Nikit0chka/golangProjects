@@ -202,7 +202,7 @@ func writeDirSizesToFile(fileName string, dirSizes []PathSize) error {
 	defer file.Close()
 
 	for _, value := range dirSizes {
-		_, err := file.WriteString(fmt.Sprintf("%s : %d \n", value.Path, value.Size))
+		_, err := file.WriteString(fmt.Sprintf("%s : %f mb\n", value.Path, float32(value.Size)/1048576.0))
 		if err != nil {
 			return fmt.Errorf("Error by trying to write file by path : %s \n %s \n", fileName, err)
 		}
