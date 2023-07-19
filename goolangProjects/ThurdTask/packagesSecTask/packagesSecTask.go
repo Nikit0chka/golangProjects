@@ -1,4 +1,4 @@
-package main
+package packagesSecTask
 
 import (
 	"flag"
@@ -9,7 +9,6 @@ import (
 	"sort"
 	"strings"
 	"sync"
-	"time"
 )
 
 // PathSize структура похожая на map[path]size
@@ -29,42 +28,8 @@ func (p PathSize) String() string {
 	return fmt.Sprintf("%s : %f mb\n", p.Path, float32(p.Size)/1048576.0)
 }
 
-func main() {
-	//Запуск таймера
-	timer := time.Now()
-	//Получаем начальную директорию, лимит размера директории в битай, тип сортировки
-	startDirectory, dirSizeLimitbits, sortType := getLogInput()
-	//Проверяем результат ввода
-	if err := checkLogInput(startDirectory, dirSizeLimitbits, sortType); err != nil {
-		log.Fatal(err)
-	}
-
-	//Получаем []PathSize с директориями и их размерами
-	dirSizes, err := getDirSizes(startDirectory)
-	if err != nil {
-		log.Fatal(err)
-	}
-	//Получаем отсортированный []PathSize с директориями и их размерами
-	sortedDirSizes, err := sortDirSizes(dirSizes, sortType)
-	if err != nil {
-		log.Fatal(err)
-	}
-	//Получаем []PathSize с превышающими лимит битов директориями
-	dirSizesLargerLimit := getDirsLargerLimit(sortedDirSizes, dirSizeLimitbits)
-	printDirsToLog(sortedDirSizes)
-
-	//Записываем директории в файл
-	err = writeDirSizesToFile("result.txt", dirSizesLargerLimit)
-	if err != nil {
-		log.Fatal(err)
-	}
-	//Вывод времени работы
-	fmt.Printf("Time of going : %s\n", time.Since(timer))
-
-}
-
-// getLogInput запрашивает и возвращает ввод с консоли директории, лимит размера директории, тип сортировки
-func getLogInput() (string, int64, string) {
+// GetLogInput запрашивает и возвращает ввод с консоли директории, лимит размера директории, тип сортировки
+func GetLogInput() (string, int64, string) {
 	var startDirectory string
 	var dirSizeLimitBits int64
 	var sortType string
@@ -82,8 +47,8 @@ func getLogInput() (string, int64, string) {
 	return startDirectory, dirSizeLimitBits * 1048576.0, strings.ToTitle(sortType)
 }
 
-// checkLogInput проверяет ввод с консоли
-func checkLogInput(startDirectory string, dirSizeLimit int64, sortType string) error {
+// CheckInput проверяет ввод с консоли
+func CheckInput(startDirectory string, dirSizeLimit int64, sortType string) error {
 	if _, err := os.Stat(startDirectory); os.IsNotExist(err) {
 		return fmt.Errorf("directory by path : %s is not exist", startDirectory)
 	}
@@ -96,8 +61,8 @@ func checkLogInput(startDirectory string, dirSizeLimit int64, sortType string) e
 	return nil
 }
 
-// getDirSizes проходит по всем вложенным директориям и возвращает массив PathSize всех директорий и их размер
-func getDirSizes(startDirectory string) ([]PathSize, error) {
+// GetDirSizes проходит по всем вложенным директориям и возвращает массив PathSize всех директорий и их размер
+func GetDirSizes(startDirectory string) ([]PathSize, error) {
 	var dirSizes []PathSize
 	var dirSizesMutex sync.Mutex
 
@@ -131,7 +96,7 @@ func getDirSizes(startDirectory string) ([]PathSize, error) {
 				return nil
 			})
 			if err != nil {
-				log.Printf("error while walking directory %q: %v", path, err)
+				log.Printf("error while walking directory %q: %v\n", path, err)
 				return
 			}
 
@@ -144,15 +109,15 @@ func getDirSizes(startDirectory string) ([]PathSize, error) {
 	})
 
 	if err != nil {
-		return nil, fmt.Errorf("error by reading directory : %s ", err)
+		return nil, fmt.Errorf("error by reading directory : %s", err)
 	}
 	waitGroup.Wait()
 
 	return dirSizes, nil
 }
 
-// sortDirSizes сортирует размер директорий в зависимости от типа сортировки ASC/DESK
-func sortDirSizes(dirSizes []PathSize, sortType string) ([]PathSize, error) {
+// SortDirSizes сортирует размер директорий в зависимости от типа сортировки ASC/DESK
+func SortDirSizes(dirSizes []PathSize, sortType string) ([]PathSize, error) {
 	sortedPathSizes := make([]PathSize, len(dirSizes))
 	copy(sortedPathSizes, dirSizes)
 
@@ -173,14 +138,14 @@ func sortDirSizes(dirSizes []PathSize, sortType string) ([]PathSize, error) {
 }
 
 // getDirsLargerLimit выводит размер директорий
-func printDirsToLog(dirSizes []PathSize) {
+func PrintDirsToLog(dirSizes []PathSize) {
 	for _, value := range dirSizes {
 		fmt.Print(value)
 	}
 }
 
-// getDirsLargerLimit возврашает массив PathSize размеров директорий, которые больше лимита размера директории
-func getDirsLargerLimit(dirSizes []PathSize, dirSizeLimit int64) []PathSize {
+// GetDirsLargerLimit возврашает массив PathSize размеров директорий, которые больше лимита размера директории
+func GetDirsLargerLimit(dirSizes []PathSize, dirSizeLimit int64) []PathSize {
 	var largDirs []PathSize
 
 	for _, value := range dirSizes {
@@ -192,18 +157,18 @@ func getDirsLargerLimit(dirSizes []PathSize, dirSizeLimit int64) []PathSize {
 	return largDirs
 }
 
-// writeDirSizesToFile записывает массив PathSize директорий и их размеров в файл
-func writeDirSizesToFile(fileName string, dirSizes []PathSize) error {
+// WriteDirSizesToFile записывает массив PathSize директорий и их размеров в файл
+func WriteDirSizesToFile(fileName string, dirSizes []PathSize) error {
 	file, err := os.Create(fileName)
 	if err != nil {
-		return fmt.Errorf("error by trying to write file by path : %s \n %s", fileName, err)
+		return fmt.Errorf("error by trying to write file by path : %s \n%e", fileName, err)
 	}
 	defer file.Close()
 
 	for _, value := range dirSizes {
 		_, err := file.WriteString(fmt.Sprint(value))
 		if err != nil {
-			return fmt.Errorf("error by trying to write file by path : %s \n %s", fileName, err)
+			return fmt.Errorf("error by trying to write file by path : %s \n%e", fileName, err)
 		}
 	}
 	return nil
