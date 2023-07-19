@@ -1,4 +1,4 @@
-package pack
+package golangProjects
 
 import (
 	"flag"

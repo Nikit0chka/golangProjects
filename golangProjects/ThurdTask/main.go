@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	pcg "golangProjects/pack"
+	pcg "github.com/Nikit0chka/golangProjects"
 )
 
 func main() {
