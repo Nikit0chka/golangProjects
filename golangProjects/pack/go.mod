@@ -1,3 +1,3 @@
-module github.com/Nikit0chka/golangProjects/pack
+module pack
 
 go 1.20

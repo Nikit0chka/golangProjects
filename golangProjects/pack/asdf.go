@@ -60,8 +60,8 @@ func CheckInput(startDirectory string, dirSizeLimit int64, sortType string) erro
 	return nil
 }
 
-// getDirSizes считает размер каждой поддиректории
-func getDirSizes(path string) ([]PathSize, error) {
+// GetDirSizes считает размер каждой поддиректории
+func GetDirSizes(path string) ([]PathSize, error) {
 	var pathSizes []PathSize
 	var wg sync.WaitGroup
 
