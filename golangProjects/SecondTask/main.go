@@ -32,7 +32,7 @@ func (p PathSize) String() string {
 func main() {
 	//Запуск таймера
 	timer := time.Now()
-	//Получаем начальную директорию, лимит размера директории в битай, тип сортировки
+	//Получаем начальную директорию, лимит размера директории в битах, тип сортировки
 	startDirectory, dirSizeLimitbits, sortType := getLogInput()
 	//Проверяем результат ввода
 	if err := checkLogInput(startDirectory, dirSizeLimitbits, sortType); err != nil {
@@ -153,17 +153,17 @@ func printDirsToLog(dirSizes []PathSize) {
 	}
 }
 
-// getDirsLargerLimit возврашает массив PathSize размеров директорий, которые больше лимита размера директории
+// getDirsLargerLimit возвращает массив PathSize размеров директорий, которые больше лимита размера директории
 func getDirsLargerLimit(dirSizes []PathSize, dirSizeLimit int64) []PathSize {
-	var largDirs []PathSize
+	var largeDirs []PathSize
 
 	for _, value := range dirSizes {
 		if value.Size > dirSizeLimit {
-			largDirs = append(largDirs, PathSize{value.Path, value.Size})
+			largeDirs = append(largeDirs, PathSize{value.Path, value.Size})
 		}
 	}
 
-	return largDirs
+	return largeDirs
 }
 
 // writeDirSizesToFile записывает массив PathSize директорий и их размеров в файл

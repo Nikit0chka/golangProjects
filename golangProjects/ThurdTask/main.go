@@ -14,7 +14,7 @@ func main() {
 
 // hostServ запускает сервер HTTP на порту 8080 и назначает обработчиков для путей
 func hostServ() {
-	http.HandleFunc("/dirsize", fileWorkHandler)
+	http.HandleFunc("/dir-size", fileWorkHandler)
 
 	fmt.Println("Server is listening...")
 	http.ListenAndServe(":8080", nil)
@@ -29,7 +29,7 @@ func fileWorkHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Проверяем данные
-	if err := pcg.CheckInput(startDirectory, (sizeLimitMb), sortType); err != nil {
+	if err := pcg.CheckInput(startDirectory, sizeLimitMb, sortType); err != nil {
 		fmt.Fprintf(w, "Error by checking input! %e\n", err)
 		return
 	}

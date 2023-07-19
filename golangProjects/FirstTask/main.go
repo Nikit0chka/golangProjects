@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"net/url"
@@ -46,13 +46,13 @@ func workWithFiles(pathToFile, pathToDirectory string) {
 				return
 			}
 
-			httpRequestinfo, err := getHttpRequestInfo(url)
+			httpRequestInfo, err := getHttpRequestInfo(url)
 			if err != nil {
 				fmt.Print(err)
 				return
 			}
 
-			err = writeToFile(pathToDirectory, domain, httpRequestinfo)
+			err = writeToFile(pathToDirectory, domain, httpRequestInfo)
 			if err != nil {
 				fmt.Print(err)
 				return
@@ -62,7 +62,7 @@ func workWithFiles(pathToFile, pathToDirectory string) {
 	wg.Wait()
 }
 
-// getDomainName возвращает имя домейна url из строки
+// getDomainName возвращает имя домена url из строки
 func getDomainName(urlName string) (string, error) {
 	parsedUrl, err := url.Parse(urlName)
 	if err != nil {
@@ -71,7 +71,7 @@ func getDomainName(urlName string) (string, error) {
 	return parsedUrl.Hostname(), nil
 }
 
-// getLogInput обробатывает ввод в консоль
+// getLogInput обрабатывает ввод в консоль
 func getLogInput() (string, string) {
 	var pathToFile string
 	var pathToDirectory string
@@ -86,14 +86,14 @@ func getLogInput() (string, string) {
 	return pathToFile, pathToDirectory
 }
 
-// isInputValid проверяет введеные данные
+// isInputValid проверяет введенные данные
 func isInputValid(pathToFile, pathToDirectory string) bool {
 	return strings.Contains(pathToFile, ".txt") && !strings.Contains(pathToDirectory, ".txt")
 }
 
-// getFileStrContent читатет файл по пути и возвращает массив строк
+// getFileStrContent читает файл по пути и возвращает массив строк
 func getFileStrContent(pathToFile string) ([]string, error) {
-	content, err := ioutil.ReadFile(pathToFile)
+	content, err := os.ReadFile(pathToFile)
 
 	if err != nil {
 		return nil, fmt.Errorf("Error of reading file by path : %s \n", err)
@@ -132,7 +132,7 @@ func getHttpRequestInfo(siteUrl string) ([]byte, error) {
 	}
 	defer resp.Body.Close()
 
-	bytesFromBody, err := ioutil.ReadAll(resp.Body)
+	bytesFromBody, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return nil, fmt.Errorf("Eror by trying do http request to : %s\n %s \n", siteUrl, err)
 	}
