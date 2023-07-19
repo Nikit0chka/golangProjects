@@ -3,7 +3,6 @@ package packagesSecTask
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"sort"
@@ -61,59 +60,35 @@ func CheckInput(startDirectory string, dirSizeLimit int64, sortType string) erro
 	return nil
 }
 
-// GetDirSizes проходит по всем вложенным директориям и возвращает массив PathSize всех директорий и их размер
-func GetDirSizes(startDirectory string) ([]PathSize, error) {
-	var dirSizes []PathSize
-	var dirSizesMutex sync.Mutex
+// getDirSizes считает размер каждой поддиректории
+func getDirSizes(path string) ([]PathSize, error) {
+	var pathSizes []PathSize
+	var wg sync.WaitGroup
 
-	waitGroup := sync.WaitGroup{}
-
-	err := filepath.Walk(startDirectory, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
+	wg.Add(1)
+	go dirSize(path, &wg, &pathSizes)
+	filepath.Walk(path, func(filePath string, f os.FileInfo, err error) error {
+		if f.IsDir() {
+			wg.Add(1)
+			go dirSize(filePath, &wg, &pathSizes)
 		}
-
-		if !info.IsDir() || path == startDirectory {
-			return nil
-		}
-
-		waitGroup.Add(1)
-
-		go func(path string) {
-			defer waitGroup.Done()
-
-			var size int64
-			err = filepath.Walk(path, func(subPath string, subInfo os.FileInfo, subErr error) error {
-				if subErr != nil {
-					return subErr
-				}
-				if subInfo == nil {
-					return nil
-				}
-				if !subInfo.IsDir() {
-					size += subInfo.Size()
-				}
-				return nil
-			})
-			if err != nil {
-				log.Printf("error while walking directory %q: %v\n", path, err)
-				return
-			}
-
-			dirSizesMutex.Lock()
-			dirSizes = append(dirSizes, PathSize{path, size})
-			dirSizesMutex.Unlock()
-		}(path)
-
 		return nil
 	})
+	wg.Wait()
+	return pathSizes, nil
+}
 
-	if err != nil {
-		return nil, fmt.Errorf("error by reading directory : %s", err)
-	}
-	waitGroup.Wait()
-
-	return dirSizes, nil
+// dirSize считает размер текущей директории
+func dirSize(path string, wg *sync.WaitGroup, sizes *[]PathSize) {
+	defer wg.Done()
+	var size int64
+	filepath.Walk(path, func(filePath string, f os.FileInfo, err error) error {
+		if !f.IsDir() {
+			size += f.Size()
+		}
+		return nil
+	})
+	*sizes = append(*sizes, PathSize{Path: path, Size: size})
 }
 
 // SortDirSizes сортирует размер директорий в зависимости от типа сортировки ASC/DESK

@@ -40,10 +40,8 @@ func main() {
 	}
 
 	//Получаем []PathSize с директориями и их размерами
-	dirSizes, err := getDirSizes(startDirectory)
-	if err != nil {
-		log.Fatal(err)
-	}
+	dirSizes := getDirSizes(startDirectory)
+
 	//Получаем отсортированный []PathSize с директориями и их размерами
 	sortedDirSizes, err := sortDirSizes(dirSizes, sortType)
 	if err != nil {
@@ -96,59 +94,35 @@ func checkLogInput(startDirectory string, dirSizeLimit int64, sortType string) e
 	return nil
 }
 
-// getDirSizes проходит по всем вложенным директориям и возвращает массив PathSize всех директорий и их размер
-func getDirSizes(startDirectory string) ([]PathSize, error) {
-	var dirSizes []PathSize
-	var dirSizesMutex sync.Mutex
+// getDirSizes считает размер каждой поддиректории
+func getDirSizes(path string) []PathSize {
+	var pathSizes []PathSize
+	var wg sync.WaitGroup
 
-	waitGroup := sync.WaitGroup{}
-
-	err := filepath.Walk(startDirectory, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			return err
+	wg.Add(1)
+	go dirSize(path, &wg, &pathSizes)
+	filepath.Walk(path, func(filePath string, f os.FileInfo, err error) error {
+		if f.IsDir() {
+			wg.Add(1)
+			go dirSize(filePath, &wg, &pathSizes)
 		}
-
-		if !info.IsDir() || path == startDirectory {
-			return nil
-		}
-
-		waitGroup.Add(1)
-
-		go func(path string) {
-			defer waitGroup.Done()
-
-			var size int64
-			err = filepath.Walk(path, func(subPath string, subInfo os.FileInfo, subErr error) error {
-				if subErr != nil {
-					return subErr
-				}
-				if subInfo == nil {
-					return nil
-				}
-				if !subInfo.IsDir() {
-					size += subInfo.Size()
-				}
-				return nil
-			})
-			if err != nil {
-				log.Printf("error while walking directory %q: %v", path, err)
-				return
-			}
-
-			dirSizesMutex.Lock()
-			dirSizes = append(dirSizes, PathSize{path, size})
-			dirSizesMutex.Unlock()
-		}(path)
-
 		return nil
 	})
+	wg.Wait()
+	return pathSizes
+}
 
-	if err != nil {
-		return nil, fmt.Errorf("error by reading directory : %s ", err)
-	}
-	waitGroup.Wait()
-
-	return dirSizes, nil
+// dirSize считает размер текущей директории
+func dirSize(path string, wg *sync.WaitGroup, sizes *[]PathSize) {
+	defer wg.Done()
+	var size int64
+	filepath.Walk(path, func(filePath string, f os.FileInfo, err error) error {
+		if !f.IsDir() {
+			size += f.Size()
+		}
+		return nil
+	})
+	*sizes = append(*sizes, PathSize{Path: path, Size: size})
 }
 
 // sortDirSizes сортирует размер директорий в зависимости от типа сортировки ASC/DESK

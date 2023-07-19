@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	pcg "ThurdTask/packagesSecTask"
+	pcg "/home/vorontsov/Desktop/rbsInternshipTasks/golangProjects/packagesSecTask"
 )
 
 func main() {
