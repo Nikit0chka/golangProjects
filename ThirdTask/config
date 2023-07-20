@@ -1,2 +1,2 @@
-domain:dir-sizes
-port:1206
+domain /dir-sizes
+port :8080

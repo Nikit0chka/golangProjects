@@ -4,26 +4,24 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
+	pcg "mainModule/pack"
 	"net/http"
 	"os"
-	"strconv"
 	"strings"
-
-	pcg "mainModule/pack"
 )
 
-type ErrorContent struct {
-	ErId    string
-	Content string
+type RequestBody struct {
+	Error string `json:"error"`
 }
 
 func main() {
-	config, err := getConfigSettings("/home/vorontsov/Desktop/golangProjects/ThirdTask/config")
+	config, err := getConfigSettings("C:\\Users\\voron\\OneDrive\\Рабочий стол\\golangProjects\\ThirdTask\\config")
 	if err != nil {
 		log.Fatal(err)
 	}
-
+	http.Handle("/static/", http.StripPrefix("/static/",)
 	hostServ(config)
 }
 
@@ -31,11 +29,11 @@ func main() {
 func hostServ(configSettings map[string]string) {
 	domainName := configSettings["domain"]
 	port := configSettings["port"]
-	fmt.Printf("%s %s", domainName, port)
-	http.HandleFunc(fmt.Sprintf("/%s", domainName), fileWorkHandler)
+
+	http.HandleFunc(domainName, fileWorkHandler)
 
 	fmt.Println("Server is listening...")
-	err := http.ListenAndServe(fmt.Sprintf(":%s", port), http.FileServer(http.Dir("static")))
+	err := http.ListenAndServe(port, fileWorkHandler)
 
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Error by trying listen serv : %s", err))
@@ -44,58 +42,48 @@ func hostServ(configSettings map[string]string) {
 
 // fileWorkHandler обработчик, принимающий из url начальную директорию, лимит размера директории, тип сортировки и работает с директориями
 func fileWorkHandler(w http.ResponseWriter, r *http.Request) {
-	var errors []ErrorContent
+	fmt.Print("sdf")
 
-	//Получаем данные из url
-	startDirectory, sizeLimitMb, sortType, err := getUrlInput(r)
-	if err != nil {
-		errors = append(errors, ErrorContent{"0", fmt.Sprint(err)})
+	reqBody := RequestBody  {Error: "asds"}
+
+	w.Header().Set("Content-Type", "application/json")
+
+	sjsj, _ := json.Marshal(reqBody)
+	w.Write(sjsj)
+}
+
+func getRequestData(r *http.Request) ([]byte, error) {
+	if r.Method != "POST" {
+		return nil, fmt.Errorf("allowed only POST methods")
 	}
 
+	body, err := io.ReadAll(r.Body)
+	if err != nil {
+		return nil, fmt.Errorf("error reading request body")
+	}
+
+	return body, nil
+}
+
+func getDirectories(startDirectory string, sizeLimitMb int64, sortType string) ([]pcg.PathSize, error) {
 	//Проверяем данные
 	if err := pcg.CheckInput(startDirectory, sizeLimitMb, sortType); err != nil {
-		errors = append(errors, ErrorContent{"1", fmt.Sprint(err)})
+		return nil, err
 	}
 
 	//Получаем директории - размеры
 	dirSizes, err := pcg.GetDirSizes(startDirectory)
 	if err != nil {
-		errors = append(errors, ErrorContent{"2", fmt.Sprint(err)})
+		return nil, err
 	}
 
 	//Сортируем директории - размеры
 	dirSizes, err = pcg.SortDirSizes(dirSizes, sortType)
 	if err != nil {
-		errors = append(errors, ErrorContent{"3", fmt.Sprint(err)})
+		return nil, err
 	}
 
-	//Получаем директории больше лимита
-	dirSizeLargerLimit := pcg.GetDirsLargerLimit(dirSizes, sizeLimitMb)
-	if err := pcg.WriteDirSizesToFile("result.txt", dirSizeLargerLimit); err != nil {
-		errors = append(errors, ErrorContent{"4", fmt.Sprint(err)})
-	}
-
-	jsonBytes, err := json.Marshal(errors)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.Write(jsonBytes)
-}
-
-// getUrlInput получает ввод с url сайта
-func getUrlInput(r *http.Request) (string, int64, string, error) {
-	vars := r.URL.Query()
-	startDirectory := vars.Get("root")
-	SizeLimitBytes, err := strconv.ParseInt(vars.Get("limit"), 10, 64)
-
-	if err != nil {
-		return "", 0, "", fmt.Errorf("eror by trying convert limit to int64! %s", err)
-	}
-	sortType := vars.Get("sort")
-
-	return startDirectory, SizeLimitBytes * 1048576.0, sortType, nil
+	return dirSizes, nil
 }
 
 // getConfigSettings получает файл с конфигом
@@ -112,7 +100,7 @@ func getConfigSettings(pathToFile string) (map[string]string, error) {
 
 	for scanner.Scan() {
 		line := scanner.Text()
-		parts := strings.Split(line, ":")
+		parts := strings.Split(line, " ")
 		host := strings.TrimSpace(parts[0])
 		value := strings.TrimSpace(parts[1])
 		configMap[host] = value
