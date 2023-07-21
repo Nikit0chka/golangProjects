@@ -1,11 +1,21 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Эмулятор проводника древовидной структуры</title>
-  <link rel="stylesheet" href="style.css">
+  <meta charset="utf-8">
+  <link rel="stylesheet" type="text/css" href="style.css">
+  <script src="script.js"></script>
 </head>
 <body>
-<h1>Эмулятор проводника древовидной структуры</h1>
-<script src="script.js"></script>
+<ul class="folder-list">
+  <div class="sort-button-container">
+  <button class="sort-button" id="clickButt" >Сорт</button>
+  <h1 class="folder-header">Ваши директории</h1>
+    <h3 class="rootPath">\home\desktop</h3>
+  <li><a>Папка 1 <span class="folder-size">10 МБ</span></a>
+  </li>
+  <li><a>Папка 2 <span class="folder-size">10 МБ</span></a>
+  </li>
+  <li><a>Папка 3 <span class="folder-size">10 МБ</span></a></li>
+</ul>
 </body>
 </html>

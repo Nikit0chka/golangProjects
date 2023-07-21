@@ -2,6 +2,7 @@ package pack
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"sort"
@@ -26,26 +27,20 @@ func (p PathSize) String() string {
 	return fmt.Sprintf("%s : %f mb\n", p.Path, float32(p.Size)/1048576.0)
 }
 
-// GetDirSizes считает размер каждой поддиректории
+// GetDirSizes считает размер каждой директории
 func GetDirSizes(path string) ([]PathSize, error) {
 	var pathSizes []PathSize
-	var wg sync.WaitGroup
+	dirs, err := ioutil.ReadDir(path)
 
-	_, err := os.Stat(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("error by geting dir size: %s", path)
 	}
 
-	wg.Add(1)
-	go dirSize(path, &wg, &pathSizes)
-	filepath.Walk(path, func(filePath string, f os.FileInfo, err error) error {
-		if f.IsDir() {
-			wg.Add(1)
-			go dirSize(filePath, &wg, &pathSizes)
+	for _, file := range dirs {
+		if file.IsDir() {
+			pathSizes = append(pathSizes, PathSize{Path: file.Name(), Size: file.Size()})
 		}
-		return nil
-	})
-	wg.Wait()
+	}
 	return pathSizes, nil
 }
 

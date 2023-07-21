@@ -8,12 +8,9 @@ import (
 )
 
 // CheckInput проверяет ввод с консоли
-func CheckInput(startDirectory string, dirSizeLimit int64, sortType string) error {
+func CheckInput(startDirectory string, sortType string) error {
 	if _, err := os.Stat(startDirectory); os.IsNotExist(err) {
 		return fmt.Errorf("directory by path : %s is not exist", startDirectory)
-	}
-	if dirSizeLimit < 0 {
-		return fmt.Errorf("directory size limit can not be less than 0 : %d", dirSizeLimit)
 	}
 	if strings.ToUpper(sortType) != ascType && strings.ToUpper(sortType) != deskType {
 		return fmt.Errorf("sort type can be ASC or DESK! %s", sortType)

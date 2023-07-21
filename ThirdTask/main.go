@@ -13,15 +13,18 @@ import (
 )
 
 type RequestBody struct {
-	Error string `json:"error"`
+	errorId  int    `json:"errorId"`
+	path     string `json:"path"`
+	size     int64  `json:"size"`
+	sortType string `json:"sortType"`
 }
 
 func main() {
-	config, err := getConfigSettings("C:\\Users\\voron\\OneDrive\\Рабочий стол\\golangProjects\\ThirdTask\\config")
+	config, err := getConfigSettings("/home/vorontsov/Desktop/golangProjects/ThirdTask/config")
 	if err != nil {
 		log.Fatal(err)
 	}
-	http.Handle("/static/", http.StripPrefix("/static/",)
+
 	hostServ(config)
 }
 
@@ -30,44 +33,84 @@ func hostServ(configSettings map[string]string) {
 	domainName := configSettings["domain"]
 	port := configSettings["port"]
 
-	http.HandleFunc(domainName, fileWorkHandler)
-
+	http.Handle("/", http.FileServer(http.Dir("static")))
+	http.HandleFunc("/"+domainName, fileWorkHandler)
 	fmt.Println("Server is listening...")
-	err := http.ListenAndServe(port, fileWorkHandler)
+	err := http.ListenAndServe(port, nil)
 
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Error by trying listen serv : %s", err))
 	}
 }
 
-// fileWorkHandler обработчик, принимающий из url начальную директорию, лимит размера директории, тип сортировки и работает с директориями
+// fileWorkHandler обработчик, принимающий json работает с директориями
 func fileWorkHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Print("sdf")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	http.ServeFile(w, r, "static/dir-sizes")
 
-	reqBody := RequestBody  {Error: "asds"}
+	var errors []error
+	//декодируем запрос
+	decodedRequest, err := decodeRequest(r)
+	if err != nil {
+		errors = append(errors, err)
+	}
 
-	w.Header().Set("Content-Type", "application/json")
+	//получаем директории
+	directories, err := getDirectories(decodedRequest.path, decodedRequest.sortType)
+	if err != nil {
+		errors = append(errors, err)
+	}
 
-	sjsj, _ := json.Marshal(reqBody)
-	w.Write(sjsj)
+	//создаем ответный json
+	jsonRequest, err := createRequest(directories)
+	if err != nil {
+		errors = append(errors, err)
+	}
+	fmt.Println(json.Marshal(jsonRequest))
+	asdf := RequestBody{1, "valuePath", 3, "sdf"}
+
+	json.NewEncoder(w).Encode(asdf)
 }
 
-func getRequestData(r *http.Request) ([]byte, error) {
-	if r.Method != "POST" {
-		return nil, fmt.Errorf("allowed only POST methods")
+// createRequest создает json для ответа
+func createRequest(directories []pcg.PathSize) ([]byte, error) {
+	var bodies []RequestBody
+	for _, value := range directories {
+		bodies = append(bodies, RequestBody{1, value.Path, int64(value.Size), "sdf"})
 	}
+
+	jsonRequest, err := json.Marshal(bodies)
+	if err != nil {
+		return nil, fmt.Errorf("error by creatin json body %s", err)
+	}
+
+	return jsonRequest, nil
+}
+
+// decodeRequest декодирует запрос в RequestBody
+func decodeRequest(r *http.Request) (RequestBody, error) {
+	if r.Method != "POST" {
+		return RequestBody{}, fmt.Errorf("allowed only POST methods")
+	}
+	var decodedRequest RequestBody
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		return nil, fmt.Errorf("error reading request body")
+		return RequestBody{}, fmt.Errorf("error reading request body %s", err)
 	}
 
-	return body, nil
+	err = json.Unmarshal(body, &decodedRequest)
+	if err != nil {
+		return RequestBody{}, fmt.Errorf("error reading request body %s", err)
+	}
+
+	return decodedRequest, nil
 }
 
-func getDirectories(startDirectory string, sizeLimitMb int64, sortType string) ([]pcg.PathSize, error) {
+// getDirectories возвращает отсортированные локальные директории
+func getDirectories(startDirectory string, sortType string) ([]pcg.PathSize, error) {
 	//Проверяем данные
-	if err := pcg.CheckInput(startDirectory, sizeLimitMb, sortType); err != nil {
+	if err := pcg.CheckInput(startDirectory, sortType); err != nil {
 		return nil, err
 	}
 
