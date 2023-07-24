@@ -3,29 +3,30 @@ package pack
 import (
 	"fmt"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
-	"sync"
 )
 
 // PathSize структура похожая на map[path]size
 type PathSize struct {
 	Path string
 	Size int64
+	Name string
+	Type string
 }
+
+// Типы файлов
+const (
+	dirType  = "DIR"
+	fileType = "FILE"
+)
 
 // Типы доступных сортировок
 const (
 	ascType  = "ASC"
 	deskType = "DESK"
 )
-
-// Реализация метода String использующий интерфейс stringer, для форматированного вывода
-func (p PathSize) String() string {
-	return fmt.Sprintf("%s : %f mb\n", p.Path, float32(p.Size)/1048576.0)
-}
 
 // GetDirSizes считает размер каждой директории
 func GetDirSizes(path string) ([]PathSize, error) {
@@ -37,24 +38,20 @@ func GetDirSizes(path string) ([]PathSize, error) {
 	}
 
 	for _, file := range dirs {
-		if file.IsDir() {
-			pathSizes = append(pathSizes, PathSize{Path: file.Name(), Size: file.Size()})
+		filePath, err := filepath.Abs(path)
+		if err != nil {
+			return nil, fmt.Errorf("error by reading full path : %s", err)
 		}
+
+		var fileTyp string
+		if file.IsDir() {
+			fileTyp = dirType
+		} else {
+			fileTyp = fileType
+		}
+		pathSizes = append(pathSizes, PathSize{fmt.Sprintf("%s\\%s", filePath, file.Name()), file.Size() / 8388608, file.Name(), fileTyp})
 	}
 	return pathSizes, nil
-}
-
-// dirSize считает размер текущей директории
-func dirSize(path string, wg *sync.WaitGroup, sizes *[]PathSize) {
-	defer wg.Done()
-	var size int64
-	filepath.Walk(path, func(filePath string, f os.FileInfo, err error) error {
-		if !f.IsDir() {
-			size += f.Size()
-		}
-		return nil
-	})
-	*sizes = append(*sizes, PathSize{Path: path, Size: size})
 }
 
 // SortDirSizes сортирует размер директорий в зависимости от типа сортировки ASC/DESK
@@ -76,34 +73,4 @@ func SortDirSizes(dirSizes []PathSize, sortType string) ([]PathSize, error) {
 	}
 
 	return sortedPathSizes, nil
-}
-
-// GetDirsLargerLimit возвращает массив PathSize размеров директорий, которые больше лимита размера директории
-func GetDirsLargerLimit(dirSizes []PathSize, dirSizeLimit int64) []PathSize {
-	var largeDirs []PathSize
-
-	for _, value := range dirSizes {
-		if value.Size > dirSizeLimit {
-			largeDirs = append(largeDirs, PathSize{value.Path, value.Size})
-		}
-	}
-
-	return largeDirs
-}
-
-// WriteDirSizesToFile записывает массив PathSize директорий и их размеров в файл
-func WriteDirSizesToFile(fileName string, dirSizes []PathSize) error {
-	file, err := os.Create(fileName)
-	if err != nil {
-		return fmt.Errorf("error by trying to write file by path : %s \n%s", fileName, err)
-	}
-	defer file.Close()
-
-	for _, value := range dirSizes {
-		_, err := file.WriteString(fmt.Sprint(value))
-		if err != nil {
-			return fmt.Errorf("error by trying to write file by path : %s \n%s", fileName, err)
-		}
-	}
-	return nil
 }

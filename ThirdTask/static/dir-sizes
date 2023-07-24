@@ -1,21 +1,23 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <link rel="stylesheet" type="text/css" href="style.css">
-  <script src="script.js"></script>
-</head>
-<body>
-<ul class="folder-list">
-  <div class="sort-button-container">
-  <button class="sort-button" id="clickButt" >Сорт</button>
-  <h1 class="folder-header">Ваши директории</h1>
-    <h3 class="rootPath">\home\desktop</h3>
-  <li><a>Папка 1 <span class="folder-size">10 МБ</span></a>
-  </li>
-  <li><a>Папка 2 <span class="folder-size">10 МБ</span></a>
-  </li>
-  <li><a>Папка 3 <span class="folder-size">10 МБ</span></a></li>
-</ul>
-</body>
-</html>
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <link rel="stylesheet" type="text/css" href="/static/style.css">
+    <script src="script.js"></script>
+  </head>
+  <body>
+  <ul class="myCont">
+    <div class="sort-button-container">
+    <button class="sort-button" id="clickButt" >Сорт</button>
+      <h3 class="rootPath">\home\desktop</h3>
+      <ul class="folder-list">
+    <li><a>Папка 1 <span class="folder-size">10 МБ</span></a>
+    </li>
+    <li><a>Папка 2 <span class="folder-size">10 МБ</span></a>
+    </li>
+    <li><a>Папка 3 <span class="folder-size">10 МБ</span></a></li>
+        </ul>
+    </div>
+  </ul>
+  </body>
+  </html>

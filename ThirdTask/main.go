@@ -6,21 +6,29 @@ import (
 	"fmt"
 	"io"
 	"log"
-	pcg "mainModule/pack"
 	"net/http"
 	"os"
 	"strings"
+
+	pcg "mainModule/pack"
 )
 
-type RequestBody struct {
-	errorId  int    `json:"errorId"`
-	path     string `json:"path"`
-	size     int64  `json:"size"`
-	sortType string `json:"sortType"`
+// ResponseJson структура json ответа
+type ResponseJson struct {
+	Name string `json:"name"`
+	Path string `json:"path"`
+	Size int64  `json:"size"`
+	Type string `json:"type"`
+}
+
+// RequestJson структура json запроса
+type RequestJson struct {
+	Path     string `json:"path"`
+	SortType string `json:"sortType"`
 }
 
 func main() {
-	config, err := getConfigSettings("/home/vorontsov/Desktop/golangProjects/ThirdTask/config")
+	config, err := getConfigSettings("C:\\Users\\voron\\OneDrive\\Рабочий стол\\golangProjects\\ThirdTask\\config")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -30,13 +38,10 @@ func main() {
 
 // hostServ запускает сервер HTTP на порту указанном в конфиге и слушает его
 func hostServ(configSettings map[string]string) {
-	domainName := configSettings["domain"]
-	port := configSettings["port"]
-
-	http.Handle("/", http.FileServer(http.Dir("static")))
-	http.HandleFunc("/"+domainName, fileWorkHandler)
+	http.HandleFunc("/dir-sizes", fileWorkHandler)
+	http.Handle("/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	fmt.Println("Server is listening...")
-	err := http.ListenAndServe(port, nil)
+	err := http.ListenAndServe(":80", nil)
 
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Error by trying listen serv : %s", err))
@@ -45,63 +50,61 @@ func hostServ(configSettings map[string]string) {
 
 // fileWorkHandler обработчик, принимающий json работает с директориями
 func fileWorkHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-	http.ServeFile(w, r, "static/dir-sizes")
-
-	var errors []error
 	//декодируем запрос
-	decodedRequest, err := decodeRequest(r)
+	requestJson, err := decodeRequest(r)
 	if err != nil {
-		errors = append(errors, err)
+		http.Error(w, fmt.Sprintf("Error by decoding json %s", err), 1)
+		return
 	}
 
 	//получаем директории
-	directories, err := getDirectories(decodedRequest.path, decodedRequest.sortType)
+	directories, err := getDirectories(requestJson.Path, requestJson.SortType)
 	if err != nil {
-		errors = append(errors, err)
+		http.Error(w, fmt.Sprintf("Error by reading directories %s", err), 2)
+		return
 	}
 
 	//создаем ответный json
-	jsonRequest, err := createRequest(directories)
+	responseJson, err := createRequest(directories)
 	if err != nil {
-		errors = append(errors, err)
+		http.Error(w, fmt.Sprintf("Error by creating json %s", err), 3)
+		return
 	}
-	fmt.Println(json.Marshal(jsonRequest))
-	asdf := RequestBody{1, "valuePath", 3, "sdf"}
 
-	json.NewEncoder(w).Encode(asdf)
+	//возвращаем json
+	w.Header().Set("Content-Type", "application/json")
+	err = json.NewEncoder(w).Encode(responseJson)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Error by responcing json %s", err), 4)
+		return
+	}
 }
 
 // createRequest создает json для ответа
-func createRequest(directories []pcg.PathSize) ([]byte, error) {
-	var bodies []RequestBody
+func createRequest(directories []pcg.PathSize) ([]ResponseJson, error) {
+	var bodies []ResponseJson
 	for _, value := range directories {
-		bodies = append(bodies, RequestBody{1, value.Path, int64(value.Size), "sdf"})
+		bodies = append(bodies, ResponseJson{value.Name, value.Path, value.Size, value.Type})
 	}
 
-	jsonRequest, err := json.Marshal(bodies)
-	if err != nil {
-		return nil, fmt.Errorf("error by creatin json body %s", err)
-	}
-
-	return jsonRequest, nil
+	return bodies, nil
 }
 
-// decodeRequest декодирует запрос в RequestBody
-func decodeRequest(r *http.Request) (RequestBody, error) {
+// decodeRequest декодирует запрос в RequestJson
+func decodeRequest(r *http.Request) (RequestJson, error) {
 	if r.Method != "POST" {
-		return RequestBody{}, fmt.Errorf("allowed only POST methods")
+		return RequestJson{}, fmt.Errorf("allowed only POST methods")
 	}
-	var decodedRequest RequestBody
+	var decodedRequest RequestJson
 
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
-		return RequestBody{}, fmt.Errorf("error reading request body %s", err)
+		return RequestJson{}, fmt.Errorf("error reading request body %s", err)
 	}
 
 	err = json.Unmarshal(body, &decodedRequest)
 	if err != nil {
-		return RequestBody{}, fmt.Errorf("error reading request body %s", err)
+		return RequestJson{}, fmt.Errorf("error reading request body %s", err)
 	}
 
 	return decodedRequest, nil
