@@ -15,10 +15,11 @@ import (
 
 // ResponseJson структура json ответа
 type ResponseJson struct {
-	Name string `json:"name"`
-	Path string `json:"path"`
-	Size int64  `json:"size"`
-	Type string `json:"type"`
+	Name   string  `json:"name"`
+	DireId int     `json:"dirId"`
+	Path   string  `json:"path"`
+	Size   float32 `json:"size"`
+	Type   string  `json:"type"`
 }
 
 // RequestJson структура json запроса
@@ -28,7 +29,7 @@ type RequestJson struct {
 }
 
 func main() {
-	config, err := getConfigSettings("C:\\Users\\voron\\OneDrive\\Рабочий стол\\golangProjects\\ThirdTask\\config")
+	config, err := getConfigSettings("/home/vorontsov/Desktop/golangProjects/ThirdTask/config")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -38,28 +39,33 @@ func main() {
 
 // hostServ запускает сервер HTTP на порту указанном в конфиге и слушает его
 func hostServ(configSettings map[string]string) {
-	http.HandleFunc("/dir-sizes", fileWorkHandler)
-	http.Handle("/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
-	fmt.Println("Server is listening...")
-	err := http.ListenAndServe(":80", nil)
+	domain := configSettings["domain"]
+	port := configSettings["port"]
 
+	http.HandleFunc(domain, fileWorkHandler)
+	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
+	fmt.Println("Server is listening...")
+
+	err := http.ListenAndServe(port, nil)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Error by trying listen serv : %s", err))
 	}
 }
 
-// fileWorkHandler обработчик, принимающий json работает с директориями
+// fileWorkHandler обработчик, принимающий и возвращающий json,работает с директориями
 func fileWorkHandler(w http.ResponseWriter, r *http.Request) {
 	//декодируем запрос
 	requestJson, err := decodeRequest(r)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error by decoding json %s", err), 1)
+		//http.Error(w, fmt.Sprintf("Error by decoding json %s", err), 1)
+		fmt.Println(err)
 		return
 	}
 
 	//получаем директории
 	directories, err := getDirectories(requestJson.Path, requestJson.SortType)
 	if err != nil {
+		fmt.Println(err)
 		http.Error(w, fmt.Sprintf("Error by reading directories %s", err), 2)
 		return
 	}
@@ -75,7 +81,7 @@ func fileWorkHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(responseJson)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error by responcing json %s", err), 4)
+		http.Error(w, fmt.Sprintf("Error by responding json %s", err), 4)
 		return
 	}
 }
@@ -83,8 +89,8 @@ func fileWorkHandler(w http.ResponseWriter, r *http.Request) {
 // createRequest создает json для ответа
 func createRequest(directories []pcg.PathSize) ([]ResponseJson, error) {
 	var bodies []ResponseJson
-	for _, value := range directories {
-		bodies = append(bodies, ResponseJson{value.Name, value.Path, value.Size, value.Type})
+	for i, value := range directories {
+		bodies = append(bodies, ResponseJson{value.Name, i, value.Path, value.Size, value.Type})
 	}
 
 	return bodies, nil
@@ -93,7 +99,7 @@ func createRequest(directories []pcg.PathSize) ([]ResponseJson, error) {
 // decodeRequest декодирует запрос в RequestJson
 func decodeRequest(r *http.Request) (RequestJson, error) {
 	if r.Method != "POST" {
-		return RequestJson{}, fmt.Errorf("allowed only POST methods")
+		return RequestJson{}, fmt.Errorf("only POST request allowed")
 	}
 	var decodedRequest RequestJson
 
@@ -118,7 +124,7 @@ func getDirectories(startDirectory string, sortType string) ([]pcg.PathSize, err
 	}
 
 	//Получаем директории - размеры
-	dirSizes, err := pcg.GetDirSizes(startDirectory)
+	dirSizes, err := pcg.GetFiles(startDirectory)
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +134,6 @@ func getDirectories(startDirectory string, sortType string) ([]pcg.PathSize, err
 	if err != nil {
 		return nil, err
 	}
-
 	return dirSizes, nil
 }
 

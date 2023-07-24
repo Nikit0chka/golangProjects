@@ -1,15 +1,24 @@
   <!DOCTYPE html>
   <html>
   <head>
+    <li id="timer" class="timer">
+    </li>
     <meta charset="utf-8">
     <link rel="stylesheet" type="text/css" href="/static/style.css">
     <script src="script.js"></script>
   </head>
   <body>
+
   <ul class="myCont">
     <div class="sort-button-container">
-    <button class="sort-button" id="clickButt" >Сорт</button>
-      <h3 class="rootPath">\home\desktop</h3>
+      <div id="currentDir">
+      <span class="root-path">Текущая директория: </span>
+      <span class="root-path">C:</span>
+      <span class="root-path">Users</span>
+      <span class="root-path">YourUserName</span>
+      <span class="root-path">YourWebsiteFolder</span>
+    </div>
+    <button class="sort-button" id="sortButt" currentSort="ASC">Сорт</button>
       <ul class="folder-list">
     <li><a>Папка 1 <span class="folder-size">10 МБ</span></a>
     </li>
