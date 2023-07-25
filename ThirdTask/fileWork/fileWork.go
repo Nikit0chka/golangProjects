@@ -10,8 +10,8 @@ import (
 	"sync"
 )
 
-// PathSize структура для работы с файлами и директориями
-type PathSize struct {
+// FileInfo структура для работы с файлами и директориями
+type FileInfo struct {
 	Path string
 	Size float32
 	Name string
@@ -31,18 +31,16 @@ const (
 )
 
 // GetDirSizes считает размер каждой поддиректории
-func GetDirSizes(path string) ([]PathSize, error) {
+func GetDirSizes(path string) ([]FileInfo, error) {
 	// Список объектов в текущей директории
 	files, err := ioutil.ReadDir(path)
 	if err != nil {
 		return nil, fmt.Errorf("error reading dir : %s", err)
 	}
-
-	// Создать WaitGroup
 	wg := sync.WaitGroup{}
 
-	// Создать канал результата
-	resCh := make(chan PathSize)
+	// Канал результата
+	resCh := make(chan FileInfo)
 
 	// Канал для ошибок
 	errCh := make(chan error)
@@ -70,7 +68,7 @@ func GetDirSizes(path string) ([]PathSize, error) {
 				}
 
 				// Отправить результат в канал
-				resCh <- PathSize{Path: dirPath, Size: float32(size) / (1024 * 1024), Name: dirName, Type: dirType}
+				resCh <- FileInfo{Path: dirPath, Size: float32(size) / (1024 * 1024), Name: dirName, Type: dirType}
 			}(file.Name())
 		}
 	}
@@ -82,7 +80,7 @@ func GetDirSizes(path string) ([]PathSize, error) {
 		close(errCh)
 	}()
 
-	result := make([]PathSize, 0)
+	result := make([]FileInfo, 0)
 	for res := range resCh {
 		result = append(result, res)
 	}
@@ -91,6 +89,7 @@ func GetDirSizes(path string) ([]PathSize, error) {
 		return nil, err
 	}
 
+	//добавляем к результату файлы
 	result, err = addFileSizes(path, result)
 	if err != nil {
 		return nil, fmt.Errorf("error trying get files from dir: %s", err)
@@ -99,7 +98,7 @@ func GetDirSizes(path string) ([]PathSize, error) {
 	return result, nil
 }
 
-// Подсчитать размер директории
+// dirSize считает размер одной директории
 func dirSize(path string) (int64, error) {
 	var size int64
 
@@ -120,8 +119,8 @@ func dirSize(path string) (int64, error) {
 	return size, nil
 }
 
-// addFileSizes возвращает файлы и их размер в pathSize
-func addFileSizes(directory string, pathSizes []PathSize) ([]PathSize, error) {
+// addFileSizes возвращает файлы и их размер
+func addFileSizes(directory string, pathSizes []FileInfo) ([]FileInfo, error) {
 	files, err := ioutil.ReadDir(directory)
 	if err != nil {
 		return nil, fmt.Errorf("error reading file : %s", err)
@@ -129,15 +128,15 @@ func addFileSizes(directory string, pathSizes []PathSize) ([]PathSize, error) {
 
 	for _, file := range files {
 		if !file.IsDir() {
-			pathSizes = append(pathSizes, PathSize{fmt.Sprintf("%s/%s", directory, file.Name()), float32(file.Size()), file.Name(), fileType})
+			pathSizes = append(pathSizes, FileInfo{fmt.Sprintf("%s/%s", directory, file.Name()), float32(file.Size()), file.Name(), fileType})
 		}
 	}
 	return pathSizes, nil
 }
 
 // SortDirSizes сортирует размер директорий в зависимости от типа сортировки ASC/DESK
-func SortDirSizes(dirSizes []PathSize, sortType string) ([]PathSize, error) {
-	sortedPathSizes := make([]PathSize, len(dirSizes))
+func SortDirSizes(dirSizes []FileInfo, sortType string) ([]FileInfo, error) {
+	sortedPathSizes := make([]FileInfo, len(dirSizes))
 	copy(sortedPathSizes, dirSizes)
 
 	switch strings.ToUpper(sortType) {
@@ -154,4 +153,16 @@ func SortDirSizes(dirSizes []PathSize, sortType string) ([]PathSize, error) {
 	}
 
 	return sortedPathSizes, nil
+}
+
+// CheckInput проверяет ввод данынх для поиска директорий
+func CheckInput(startDirectory string, sortType string) error {
+	if _, err := os.Stat(startDirectory); os.IsNotExist(err) {
+		return fmt.Errorf("directory by path : %s is not exist", startDirectory)
+	}
+	if strings.ToUpper(sortType) != ascType && strings.ToUpper(sortType) != deskType {
+		return fmt.Errorf("sort type can be ASC or DESK! %s", sortType)
+	}
+
+	return nil
 }

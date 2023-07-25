@@ -37,7 +37,7 @@ func main() {
 	hostServ(config["port"], config["domain"], config["ip"])
 }
 
-// hostServ запускает сервер HTTP на порту указанном в конфиге и слушает его
+// hostServ запускает сервер по ip и порту указанных в конфиге
 func hostServ(port, domain, ip string) {
 	http.HandleFunc(domain, fileWorkHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
@@ -49,27 +49,24 @@ func hostServ(port, domain, ip string) {
 	}
 }
 
-// fileWorkHandler обработчик, принимающий и возвращающий json,работает с директориями
+// fileWorkHandler обработчик, принимающий и возвращающий json, работает с директориями
 func fileWorkHandler(w http.ResponseWriter, r *http.Request) {
 	//декодируем запрос
 	requestJson, err := decodeRequest(r)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error by decoding json %s", err), 1)
-		return
 	}
 
 	//получаем директории
 	directories, err := getDirectories(requestJson.Path, requestJson.SortType)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error by reading directories %s", err), 2)
-		return
 	}
 
 	//создаем ответный json
 	responseJson, err := createRequest(directories)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error by creating json %s", err), 3)
-		return
 	}
 
 	//возвращаем json
@@ -77,12 +74,11 @@ func fileWorkHandler(w http.ResponseWriter, r *http.Request) {
 	err = json.NewEncoder(w).Encode(responseJson)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error by responding json %s", err), 4)
-		return
 	}
 }
 
 // createRequest создает json для ответа
-func createRequest(directories []flwrk.PathSize) ([]ResponseJson, error) {
+func createRequest(directories []flwrk.FileInfo) ([]ResponseJson, error) {
 	var bodies []ResponseJson
 
 	if len(directories) == 0 {
@@ -118,7 +114,7 @@ func decodeRequest(r *http.Request) (RequestJson, error) {
 }
 
 // getDirectories возвращает отсортированные локальные директории
-func getDirectories(startDirectory string, sortType string) ([]flwrk.PathSize, error) {
+func getDirectories(startDirectory string, sortType string) ([]flwrk.FileInfo, error) {
 	//Проверяем данные
 	if err := flwrk.CheckInput(startDirectory, sortType); err != nil {
 		return nil, err
@@ -138,7 +134,7 @@ func getDirectories(startDirectory string, sortType string) ([]flwrk.PathSize, e
 	return dirSizes, nil
 }
 
-// getConfigSettings получает файл с конфигом
+// getConfigSettings разбивает файл с конфигом
 func getConfigSettings(pathToFile string) (map[string]string, error) {
 	configMap := make(map[string]string)
 
@@ -158,6 +154,5 @@ func getConfigSettings(pathToFile string) (map[string]string, error) {
 
 		configMap[key] = value
 	}
-
 	return configMap, nil
 }

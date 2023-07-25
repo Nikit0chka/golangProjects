@@ -162,7 +162,7 @@ function addTimerToHtml(result){
     span.appendChild(document.createTextNode(result))
 }
 
-// sendJsonAndUpdateHtml отправляет json и по результатам ответа изменяет фронт
+// sendJsonAndUpdateHtml отправляет json и по результатам ответа изменяет html
 async function sendJsonAndUpdateHtml(path){
     const start= new Date().getTime()
 
