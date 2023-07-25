@@ -12,11 +12,11 @@
   <ul class="myCont">
     <div class="sort-button-container">
       <div id="currentDir">
+      </div>
+      <button class="sort-button" id="sortButt" >Сорт</button>
     </div>
-    <button class="sort-button" id="sortButt" currentSort="ASC">Сорт</button>
       <ul class="folder-list">
         </ul>
-    </div>
   </ul>
   </body>
   </html>

@@ -10,7 +10,7 @@ import (
 	"os"
 	"strings"
 
-	flwrk "mainModule/fileWork"
+	flWrk "mainModule/fileWork"
 )
 
 // ResponseJson структура json ответа
@@ -78,7 +78,7 @@ func fileWorkHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 // createRequest создает json для ответа
-func createRequest(directories []flwrk.FileInfo) ([]ResponseJson, error) {
+func createRequest(directories []flWrk.FileInfo) ([]ResponseJson, error) {
 	var bodies []ResponseJson
 
 	if len(directories) == 0 {
@@ -114,20 +114,20 @@ func decodeRequest(r *http.Request) (RequestJson, error) {
 }
 
 // getDirectories возвращает отсортированные локальные директории
-func getDirectories(startDirectory string, sortType string) ([]flwrk.FileInfo, error) {
+func getDirectories(startDirectory string, sortType string) ([]flWrk.FileInfo, error) {
 	//Проверяем данные
-	if err := flwrk.CheckInput(startDirectory, sortType); err != nil {
+	if err := flWrk.CheckInput(startDirectory, sortType); err != nil {
 		return nil, err
 	}
 
 	//Получаем директории - размеры
-	dirSizes, err := flwrk.GetDirSizes(startDirectory)
+	dirSizes, err := flWrk.GetDirSizes(startDirectory)
 	if err != nil {
 		return nil, err
 	}
 
 	//Сортируем директории - размеры
-	dirSizes, err = flwrk.SortDirSizes(dirSizes, sortType)
+	dirSizes, err = flWrk.SortDirSizes(dirSizes, sortType)
 	if err != nil {
 		return nil, err
 	}

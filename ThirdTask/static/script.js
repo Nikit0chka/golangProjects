@@ -17,12 +17,13 @@ class JsonRequest{
     }
 }
 
-//url домена
+//url сервера
 const url = "http://192.168.81.48:1146/dir-sizes"
 
 //типы сортировок
 const asc = "ASC"
 const desk = "DESK"
+
 
 //addEventsOnDirRoot добавляет обработчиков на нажатие по корню
 function addEventsOnDirRoot() {
@@ -37,7 +38,7 @@ function addEventsOnDirRoot() {
 
 //addEventsToFolders добавляет обработчиков на нажатие по папкам
 function addEventsToFolders(){
-    const folders = document.querySelectorAll(".folder-list li a")
+    const folders = document.querySelectorAll(".folder-list li")
     folders.forEach(folder => {
         folder.addEventListener("click", function() {
             let path = folder.getAttribute("path")
@@ -96,10 +97,11 @@ function addRootToHtml(path){
     // ничего не менять если путь пустой
     if (path.length === 0)
         return
-
+    console.log(path)
     let dirs = path.split('/')
-    let root = document.getElementById("currentDir")
-    root.innerHTML = ""
+    console.log(dirs)
+    let htmlPath = document.getElementById("currentDir")
+    htmlPath.innerHTML = ""
     let currentPath = ""
 
     for (let i = 0; i < dirs.length-1; i++)
@@ -108,9 +110,10 @@ function addRootToHtml(path){
         currentPath += dirs[i] + '/'
         span.setAttribute("path", currentPath)
         span.className = "root-path"
+
         span.appendChild(document.createTextNode(dirs[i]))
         span.appendChild(document.createTextNode("/"))
-        root.appendChild(span)
+        htmlPath.appendChild(span)
     }
     addEventsOnDirRoot()
 }
@@ -129,21 +132,22 @@ function addFilesToHtml(folders) {
             if (folders[j].dirId === i)
             {
                 let folder = folders[i]
-                let li = document.createElement("li")
-                let a = document.createElement("a")
-                let img = document.createElement("img")
-                folder.type === "DIR" ? img.src = "dirImage.png" : img.src = "fileImg.jpg"
-                let span = document.createElement("span")
-                img.className = "image"
-                li.appendChild(a)
-                a.setAttribute("name", folder.name)
-                a.setAttribute("path", folder.path)
-                a.appendChild(img)
-                a.appendChild(document.createTextNode(folder.name))
-                a.appendChild(span)
-                span.classList.add("folder-size")
-                span.appendChild(document.createTextNode(folder.size + "  mb"))
-                folderList.appendChild(li)
+                let fileSpace = document.createElement("li")
+                let fileNameSpace = document.createElement("li")
+                let fileIcon = document.createElement("img")
+                folder.type === "DIR" ? fileIcon.src = "dirImage.png" : fileIcon.src = "fileImg.jpg"
+                let folderSize = document.createElement("span")
+                fileIcon.className = "file-icon"
+                fileSpace.className = "file-space"
+                fileSpace.appendChild(fileNameSpace)
+                fileSpace.setAttribute("name", folder.name)
+                fileSpace.setAttribute("path", folder.path)
+                fileNameSpace.appendChild(fileIcon)
+                fileNameSpace.appendChild(document.createTextNode(folder.name))
+                fileSpace.appendChild(folderSize)
+                folderSize.className = "folder-size"
+                folderSize.appendChild(document.createTextNode(folder.size + "  mb"))
+                folderList.appendChild(fileSpace)
 
                 break
             }
