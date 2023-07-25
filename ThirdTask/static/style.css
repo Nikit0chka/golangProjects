@@ -5,16 +5,14 @@
 }
 
 .image {
-    height: 15px;
-    width: 15px;
+    height: 50px;
+    width: 50px;
 }
 
 .folder-list {
-    list-style-type: circle;
+    list-style-type: none;
     flex-direction: column;
 }
-
-.timer
 
 .folder-list li {
     margin-bottom: .5rem;
@@ -63,7 +61,10 @@
 }
 
 .rootPath{
-    margin-right: 350px;
-    margin-bottom: 10px;
-    margin-top:  10px;
+    curson: pointer;
+
+}
+
+.timer{
+    colror: red;
 }

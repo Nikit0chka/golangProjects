@@ -1,24 +1,24 @@
 //структура json ответа
 class JsonResponse{
     constructor(name, dirId, path, size, type) {
-        this.name = name;
+        this.name = name
         this.dirId = dirId
-        this.path = path;
-        this.size = size;
-        this.type = type;
+        this.path = path
+        this.size = size
+        this.type = type
     }
 }
 
 // структура json запроса
 class JsonRequest{
     constructor(path, sortType) {
-        this.path = path;
-        this.sortType = sortType;
+        this.path = path
+        this.sortType = sortType
     }
 }
 
 //url домена
-const url = "http://localhost:1144/dir-sizes";
+const url = "http://192.168.81.48:1146/dir-sizes"
 
 //типы сортировок
 const asc = "ASC"
@@ -26,34 +26,34 @@ const desk = "DESK"
 
 //addEventsOnDirRoot добавляет обработчиков на нажатие по корню
 function addEventsOnDirRoot() {
-    const roots = document.querySelectorAll(".root-path");
+    const roots = document.querySelectorAll(".root-path")
     roots.forEach(root => {
         root.addEventListener("click", function (){
             let path = root.getAttribute("path")
             sendJsonAndUpdateHtml(path)
-        });
-    });
+        })
+    })
 }
 
 //addEventsToFolders добавляет обработчиков на нажатие по папкам
 function addEventsToFolders(){
-    const folders = document.querySelectorAll(".folder-list li a");
+    const folders = document.querySelectorAll(".folder-list li a")
     folders.forEach(folder => {
         folder.addEventListener("click", function() {
-            let path = folder.getAttribute("path");
+            let path = folder.getAttribute("path")
             sendJsonAndUpdateHtml(path)
-        });
-    });
+        })
+    })
 }
 
 //addEventOnButton добавляет обработчиков на нажатие по кнопке сортировки
  function addEventOnButton() {
-     const button = document.getElementById("sortButt");
+     const button = document.getElementById("sortButt")
      button.addEventListener("click", function () {
          button.getAttribute("currentSort") === asc ? button.setAttribute("currentSort", desk) : button.setAttribute("currentSort", asc)
          let currentPath = getCurrentPath()
-         sendJsonAndUpdateHtml(currentPath);
-     });
+         sendJsonAndUpdateHtml(currentPath)
+     })
 }
 
 //getCurrentSortType возвращает текущий тип сортировки с кнопки
@@ -79,64 +79,72 @@ async function sendJsonRequest(jsonRequest) {
     const data = {
         path: jsonRequest.path,
         sortType: jsonRequest.sortType
-    };
+    }
     const response = await fetch(url, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
         },
         body: JSON.stringify(data)
-    });
-    const json = await response.json();
-    return json.map(item => new JsonResponse(item.name,  item.dirId, item.path, item.size, item.type));
+    })
+    const json = await response.json()
+    return json.map(item => new JsonResponse(item.name,  item.dirId, item.path, item.size, item.type))
 }
 
 //addRootToHtml добавляет путь от корня в html
 function addRootToHtml(path){
-    let dirs = path.split('/');
+    // ничего не менять если путь пустой
+    if (path.length === 0)
+        return
+
+    let dirs = path.split('/')
     let root = document.getElementById("currentDir")
-    root.innerHTML = "";
-    let currentPath = "";
+    root.innerHTML = ""
+    let currentPath = ""
 
     for (let i = 0; i < dirs.length-1; i++)
     {
-        let span = document.createElement("span");
-        currentPath += dirs[i] + '/';
-        span.setAttribute("path", currentPath);
+        let span = document.createElement("span")
+        currentPath += dirs[i] + '/'
+        span.setAttribute("path", currentPath)
         span.className = "root-path"
         span.appendChild(document.createTextNode(dirs[i]))
         span.appendChild(document.createTextNode("/"))
-        root.appendChild(span);
+        root.appendChild(span)
     }
     addEventsOnDirRoot()
 }
 
 //addFilesToHtml добавляет файлы в html
 function addFilesToHtml(folders) {
-    let folderList = document.querySelector(".folder-list");
-    folderList.innerHTML = "";
+    let folderList = document.querySelector(".folder-list")
+    folderList.innerHTML = ""
     for (let i = 0; i < folders.length; i++)
     {
+        //ничего не добавлять, если имя нового файла пустое
+        if (folders[i].name.length === 0)
+            continue
         for (let j = 0; j < folders.length; j++)
         {
             if (folders[j].dirId === i)
             {
-                let folder = folders[i];
-                let li = document.createElement("li");
-                let a = document.createElement("a");
-                let img = document.createElement("img");
+                let folder = folders[i]
+                let li = document.createElement("li")
+                let a = document.createElement("a")
+                let img = document.createElement("img")
                 folder.type === "DIR" ? img.src = "dirImage.png" : img.src = "fileImg.jpg"
-                let span = document.createElement("span");
+                let span = document.createElement("span")
                 img.className = "image"
-                li.appendChild(a);
-                a.setAttribute("name", folder.name);
+                li.appendChild(a)
+                a.setAttribute("name", folder.name)
                 a.setAttribute("path", folder.path)
                 a.appendChild(img)
-                a.appendChild(document.createTextNode(folder.name));
-                a.appendChild(span);
-                span.classList.add("folder-size");
-                span.appendChild(document.createTextNode(folder.size + "  mb"));
-                folderList.appendChild(li);
+                a.appendChild(document.createTextNode(folder.name))
+                a.appendChild(span)
+                span.classList.add("folder-size")
+                span.appendChild(document.createTextNode(folder.size + "  mb"))
+                folderList.appendChild(li)
+
                 break
             }
         }    
@@ -154,15 +162,15 @@ function addTimerToHtml(result){
     span.appendChild(document.createTextNode(result))
 }
 
-// sendJsonAndUpdateHtml отправляет json и по результатам ответа изменяет html
-function sendJsonAndUpdateHtml(path){
-    const start= new Date().getTime();
+// sendJsonAndUpdateHtml отправляет json и по результатам ответа изменяет фронт
+async function sendJsonAndUpdateHtml(path){
+    const start= new Date().getTime()
 
     let currentSortType = getCurrentSortType()
     let jsonRequest = new JsonRequest(path, currentSortType)
 
-    sendJsonRequest(jsonRequest).then(data => {addRootToHtml(data[0].path); addFilesToHtml(data)}).catch(error => console.error(error))
-    const end = new Date().getTime();
+    await sendJsonRequest(jsonRequest).then(data => {addRootToHtml(data[0].path); addFilesToHtml(data) }).catch(error => console.error(error))
+    const end = new Date().getTime()
 
     addTimerToHtml(end - start)
 }
