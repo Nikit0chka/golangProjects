@@ -1,0 +1,85 @@
+/* Стили для титульной страницы */
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f6f6f6;
+}
+
+/* Стили для контейнера файлового менеджера */
+.myCont {
+    margin: 20px auto;
+    width: 80%;
+    max-width: 960px;
+    padding: 20px;
+    background-color: #fff;
+    box-shadow: 0 0 10px 0 rgba(0,0,0,0.2);
+}
+
+/* Стили для кнопки сортировки */
+.sort-button-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.sort-button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    background-color: #3498db;
+    cursor: pointer;
+}
+
+.root{
+    cursor: pointer;
+}
+
+/* Стили для списка папок/файлов */
+.folder-list {
+    list-style-type: none;
+    margin: 0;
+    padding: 0;
+}
+
+.folder-list li {
+    display: flex;
+    align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+}
+
+.folder-list li:hover {
+    background-color: #f6f6f6;
+}
+
+/* Стили для иконок папок/файлов */
+.file-icon {
+    height:50px;
+    width:50px;
+}
+
+/* Стили для имени файлов/папок */
+.folder-list li .file-name {
+    flex-grow: 1;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Стили для таймера */
+.timer {
+    float: right;
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold
+}
+
+.folder-size{
+    font-size: 15px;
+    flex-grow: 1;
+    bottom: 0;
+    font-weight: bold;
+    margin-right: auto;
+    color: #333;
+    text-align: right;
+}

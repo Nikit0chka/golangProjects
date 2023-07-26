@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"strings"
@@ -29,17 +30,17 @@ type RequestJson struct {
 }
 
 func main() {
-	config, err := getConfigSettings("C:\\Users\\voron\\OneDrive\\Рабочий стол\\golangProjects\\ThirdTask\\config")
+	config, err := getConfigSettings("/home/vorontsov/Desktop/golangProjects/ThirdTask/config")
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	hostServ(config["port"], config["domain"], config["ip"])
+	hostServ(config["port"], getIp())
 }
 
 // hostServ запускает сервер по ip и порту указанных в конфиге
-func hostServ(port, domain, ip string) {
-	http.HandleFunc(domain, fileWorkHandler)
+func hostServ(port, ip string) {
+	http.HandleFunc("/", fileWorkHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	fmt.Println("Server is listening...")
 
@@ -54,7 +55,8 @@ func fileWorkHandler(w http.ResponseWriter, r *http.Request) {
 	//декодируем запрос
 	requestJson, err := decodeRequest(r)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Error by decoding json %s", err), 1)
+		http.ServeFile(w, r, "static/dir-sizes")
+		return
 	}
 
 	//получаем директории
@@ -96,8 +98,9 @@ func createResponse(directories []flWrk.FileInfo) ([]ResponseJson, error) {
 // decodeRequest декодирует запрос в RequestJson
 func decodeRequest(r *http.Request) (RequestJson, error) {
 	if r.Method != "POST" {
-		return RequestJson{}, fmt.Errorf("only POST request allowed")
+		return RequestJson{}, fmt.Errorf("only POST method allowed")
 	}
+
 	var decodedRequest RequestJson
 
 	body, err := io.ReadAll(r.Body)
@@ -155,4 +158,21 @@ func getConfigSettings(pathToFile string) (map[string]string, error) {
 		configMap[key] = value
 	}
 	return configMap, nil
+}
+
+func getIp() string {
+	addrs, err := net.InterfaceAddrs()
+	if err != nil {
+		fmt.Println(err)
+		return ""
+	}
+	for _, addr := range addrs {
+		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
+			if ipnet.IP.To4() != nil {
+				fmt.Println("Your IP address is:", ipnet.IP.String())
+				return ipnet.IP.String()
+			}
+		}
+	}
+	return ""
 }
