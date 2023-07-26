@@ -7,12 +7,13 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
+import { addRootToHtml, addFilesToHtml, addTimerToHtml } from "./editHtml";
 // типы сортировок
-const asc = "ASC";
-const desk = "DESK";
-let currentSort = asc;
+export const asc = "ASC";
+export const desk = "DESK";
+export let currentSort = asc;
 // url сервера
-const url = "./";
+export const url = "./";
 // структура json ответа
 class JsonResponse {
     constructor(name, fileOrder, path, size, type) {
@@ -49,7 +50,7 @@ function sendJsonRequest(jsonRequest) {
     });
 }
 // sendJsonAndUpdateHtml отправляет json и по результатам ответа изменяет html
-function sendJsonAndUpdateHtml(path) {
+export function sendJsonAndUpdateHtml(path) {
     return __awaiter(this, void 0, void 0, function* () {
         const start = new Date().getTime();
         let jsonRequest = new JsonRequest(path, currentSort);

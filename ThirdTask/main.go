@@ -1,17 +1,13 @@
 package main
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
+	flWrk "mainModule/fileWork"
 	"net"
 	"net/http"
-	"os"
-	"strings"
-
-	flWrk "mainModule/fileWork"
 )
 
 // ResponseJson структура json ответа
@@ -30,21 +26,16 @@ type RequestJson struct {
 }
 
 func main() {
-	config, err := getConfigSettings("/home/vorontsov/Desktop/golangProjects/ThirdTask/config")
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	hostServ(config["port"], getIp())
+	hostServ(getIp())
 }
 
 // hostServ запускает сервер по ip и порту указанных в конфиге
-func hostServ(port, ip string) {
+func hostServ(ip string) {
 	http.HandleFunc("/", fileWorkHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	fmt.Println("Server is listening...")
 
-	err := http.ListenAndServe(ip+port, nil)
+	err := http.ListenAndServe(port, nil)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Error by trying listen serv : %s", err))
 	}
@@ -135,29 +126,6 @@ func getDirectories(startDirectory string, sortType string) ([]flWrk.FileInfo, e
 		return nil, err
 	}
 	return dirSizes, nil
-}
-
-// getConfigSettings разбивает файл с конфигом
-func getConfigSettings(pathToFile string) (map[string]string, error) {
-	configMap := make(map[string]string)
-
-	file, err := os.Open(pathToFile)
-	if err != nil {
-		return nil, fmt.Errorf("error by trying open config file by path %s : %s", pathToFile, err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		parts := strings.Split(line, " ")
-		key := strings.TrimSpace(parts[0])
-		value := strings.TrimSpace(parts[1])
-
-		configMap[key] = value
-	}
-	return configMap, nil
 }
 
 func getIp() string {

@@ -1,5 +1,5 @@
 // addRootToHtml добавляет путь от корня в html
-function addRootToHtml(path) {
+export function addRootToHtml(path) {
     // ничего не менять если путь пустой
     if (path.length === 0)
         return;
@@ -29,7 +29,7 @@ function addRootToHtml(path) {
     addEventsOnDirRoot();
 }
 // addFilesToHtml добавляет файлы в html
-function addFilesToHtml(folders) {
+export function addFilesToHtml(folders) {
     let folderList = document.querySelector(".folder-list");
     folderList.innerHTML = "";
     for (let i = 0; i < folders.length; i++) {
@@ -62,7 +62,7 @@ function addFilesToHtml(folders) {
     addEventsToFolders();
 }
 // addTimerToHtml выводит результат работы таймера
-function addTimerToHtml(result) {
+export function addTimerToHtml(result) {
     let timer = document.getElementById("timer");
     timer.innerHTML = "";
     let span = document.createElement("span");
