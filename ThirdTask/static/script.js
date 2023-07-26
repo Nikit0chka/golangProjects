@@ -94,7 +94,6 @@ function addRootToHtml(path){
     return
 
   let dirs = path.split('/')
-  console.log(dirs)
   let htmlPath = document.getElementById("currentDir")
   htmlPath.innerHTML = ""
 

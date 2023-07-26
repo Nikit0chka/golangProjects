@@ -161,16 +161,16 @@ func getConfigSettings(pathToFile string) (map[string]string, error) {
 }
 
 func getIp() string {
-	addrs, err := net.InterfaceAddrs()
+	adres, err := net.InterfaceAddrs()
 	if err != nil {
 		fmt.Println(err)
 		return ""
 	}
-	for _, addr := range addrs {
-		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-			if ipnet.IP.To4() != nil {
-				fmt.Println("Your IP address is:", ipnet.IP.String())
-				return ipnet.IP.String()
+	for _, addr := range adres {
+		if aspnet, ok := addr.(*net.IPNet); ok && !aspnet.IP.IsLoopback() {
+			if aspnet.IP.To4() != nil {
+				fmt.Println("Your IP address is:", aspnet.IP.String())
+				return aspnet.IP.String()
 			}
 		}
 	}
