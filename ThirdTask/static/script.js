@@ -1,8 +1,8 @@
 //структура json ответа
 class JsonResponse{
-    constructor(name, dirId, path, size, type) {
+    constructor(name, fileOrder, path, size, type) {
         this.name = name
-        this.dirId = dirId
+        this.fileOrder = fileOrder
         this.path = path
         this.size = size
         this.type = type
@@ -18,16 +18,16 @@ class JsonRequest{
 }
 
 //url сервера
-const url = "http://192.168.81.48:1146/dir-sizes"
-
+const url = "/dir-sizes"
 //типы сортировок
 const asc = "ASC"
 const desk = "DESK"
 
+var currentSort = asc
 
 //addEventsOnDirRoot добавляет обработчиков на нажатие по корню
 function addEventsOnDirRoot() {
-    const roots = document.querySelectorAll(".root-path")
+    const roots = document.querySelectorAll(".root")
     roots.forEach(root => {
         root.addEventListener("click", function (){
             let path = root.getAttribute("path")
@@ -51,21 +51,15 @@ function addEventsToFolders(){
  function addEventOnButton() {
      const button = document.getElementById("sortButt")
      button.addEventListener("click", function () {
-         button.getAttribute("currentSort") === asc ? button.setAttribute("currentSort", desk) : button.setAttribute("currentSort", asc)
-         let currentPath = getCurrentPath()
+         let currentPath = getCurrentPath();
+         currentSort === asc ? currentSort = desk : currentSort = asc
          sendJsonAndUpdateHtml(currentPath)
      })
 }
 
-//getCurrentSortType возвращает текущий тип сортировки с кнопки
-function getCurrentSortType(){
-    const button = document.getElementById("sortButt")
-    return button.getAttribute("currentSort") === "ASC"? asc:desk
-}
-
 //getCurrentPath возвращает путь к текущей директории
 function getCurrentPath(){
-    const roots = document.querySelectorAll(".root-path")
+    const roots = document.querySelectorAll(".root")
     let maxRootLen = ""
 
     for (let i = 0; i < roots.length; i++)
@@ -89,7 +83,7 @@ async function sendJsonRequest(jsonRequest) {
         body: JSON.stringify(data)
     })
     const json = await response.json()
-    return json.map(item => new JsonResponse(item.name,  item.dirId, item.path, item.size, item.type))
+    return json.map(item => new JsonResponse(item.name,  item.fileOrder, item.path, item.size, item.type))
 }
 
 //addRootToHtml добавляет путь от корня в html
@@ -97,23 +91,24 @@ function addRootToHtml(path){
     // ничего не менять если путь пустой
     if (path.length === 0)
         return
-    console.log(path)
-    let dirs = path.split('/')
-    console.log(dirs)
+
+    let dirs = path.split('\\')
     let htmlPath = document.getElementById("currentDir")
     htmlPath.innerHTML = ""
     let currentPath = ""
 
     for (let i = 0; i < dirs.length-1; i++)
     {
-        let span = document.createElement("span")
-        currentPath += dirs[i] + '/'
-        span.setAttribute("path", currentPath)
-        span.className = "root-path"
+        if (dirs[i].length === 0)
+            continue
 
-        span.appendChild(document.createTextNode(dirs[i]))
-        span.appendChild(document.createTextNode("/"))
-        htmlPath.appendChild(span)
+        let root = document.createElement("a")
+        currentPath += dirs[i] + '\\'
+        root.setAttribute("path", currentPath)
+        root.className = "root"
+        root.appendChild(document.createTextNode(dirs[i]))
+        root.appendChild(document.createTextNode("\\"))
+        htmlPath.appendChild(root)
     }
     addEventsOnDirRoot()
 }
@@ -129,7 +124,7 @@ function addFilesToHtml(folders) {
             continue
         for (let j = 0; j < folders.length; j++)
         {
-            if (folders[j].dirId === i)
+            if (folders[j].fileOrder === i)
             {
                 let folder = folders[i]
                 let fileSpace = document.createElement("li")
@@ -163,15 +158,14 @@ function addTimerToHtml(result){
 
     let span = document.createElement("span")
     timer.appendChild(span)
-    span.appendChild(document.createTextNode(result))
+    span.appendChild(document.createTextNode(result  + "ms"))
 }
 
 // sendJsonAndUpdateHtml отправляет json и по результатам ответа изменяет html
 async function sendJsonAndUpdateHtml(path){
     const start= new Date().getTime()
 
-    let currentSortType = getCurrentSortType()
-    let jsonRequest = new JsonRequest(path, currentSortType)
+    let jsonRequest = new JsonRequest(path, currentSort)
 
     await sendJsonRequest(jsonRequest).then(data => {addRootToHtml(data[0].path); addFilesToHtml(data) }).catch(error => console.error(error))
     const end = new Date().getTime()
@@ -182,5 +176,5 @@ async function sendJsonAndUpdateHtml(path){
 //события при загрузке окна
 window.onload = function (){
     addEventOnButton()
-    sendJsonAndUpdateHtml("/home")
+    sendJsonAndUpdateHtml("\\")
 }

@@ -15,11 +15,11 @@ import (
 
 // ResponseJson структура json ответа
 type ResponseJson struct {
-	Name   string  `json:"name"`
-	DireId int     `json:"dirId"`
-	Path   string  `json:"path"`
-	Size   float32 `json:"size"`
-	Type   string  `json:"type"`
+	Name      string  `json:"name"`
+	FileOrder int     `json:"fileOrder"`
+	Path      string  `json:"path"`
+	Size      float32 `json:"size"`
+	Type      string  `json:"type"`
 }
 
 // RequestJson структура json запроса
@@ -29,7 +29,7 @@ type RequestJson struct {
 }
 
 func main() {
-	config, err := getConfigSettings("/home/vorontsov/Desktop/golangProjects/ThirdTask/config")
+	config, err := getConfigSettings("C:\\Users\\voron\\OneDrive\\Рабочий стол\\golangProjects\\ThirdTask\\config")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -64,7 +64,7 @@ func fileWorkHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//создаем ответный json
-	responseJson, err := createRequest(directories)
+	responseJson, err := createResponse(directories)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error by creating json %s", err), 3)
 	}
@@ -77,8 +77,8 @@ func fileWorkHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// createRequest создает json для ответа
-func createRequest(directories []flWrk.FileInfo) ([]ResponseJson, error) {
+// createResponse создает json для ответа
+func createResponse(directories []flWrk.FileInfo) ([]ResponseJson, error) {
 	var bodies []ResponseJson
 
 	if len(directories) == 0 {
@@ -86,8 +86,8 @@ func createRequest(directories []flWrk.FileInfo) ([]ResponseJson, error) {
 		return bodies, nil
 	}
 
-	for i, value := range directories {
-		bodies = append(bodies, ResponseJson{value.Name, i, value.Path, value.Size, value.Type})
+	for _, value := range directories {
+		bodies = append(bodies, ResponseJson{value.Name, value.FileOrder, value.Path, value.Size, value.Type})
 	}
 
 	return bodies, nil
@@ -121,9 +121,9 @@ func getDirectories(startDirectory string, sortType string) ([]flWrk.FileInfo, e
 	}
 
 	//Получаем директории - размеры
-	dirSizes, err := flWrk.GetDirSizes(startDirectory)
+	dirSizes, err := flWrk.GetFileInfos(startDirectory)
 	if err != nil {
-		return nil, err
+		return dirSizes, err
 	}
 
 	//Сортируем директории - размеры
