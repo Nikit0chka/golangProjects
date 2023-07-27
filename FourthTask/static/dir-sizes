@@ -15,7 +15,7 @@
       </div>
       <button class="sort-button" id="sortButt" >Сорт</button>
     </div>
-      <ul class="folder-list">
+      <ul class="folder-list" id="folder-list">
         </ul>
   </ul>
   </body>

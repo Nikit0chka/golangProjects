@@ -36,28 +36,28 @@ export function addRootToHtml(path, eventHandler) {
     // ничего не менять если путь пустой
     if (path.length === 0)
         return;
-    let dirs = path.split('\\');
+    let dirs = path.split('/');
     let htmlPath = document.getElementById("currentDir");
     htmlPath.innerHTML = "";
     //всегда добавляем путь к корню
     let root = document.createElement("a");
-    let currentPath = '\\';
+    let currentPath = '/';
     root.setAttribute("path", currentPath);
     root.className = "root";
     root.addEventListener("click", eventHandler);
-    root.appendChild(document.createTextNode("\\"));
+    root.appendChild(document.createTextNode("/"));
     htmlPath.appendChild(root);
     currentPath = '';
     for (let i = 1; i < dirs.length - 1; i++) {
         if (dirs[i].length === 0)
             continue;
         let root = document.createElement("a");
-        currentPath += '\\' + dirs[i];
+        currentPath += '/' + dirs[i];
         root.setAttribute("path", currentPath);
         root.className = "root";
         root.addEventListener("click", eventHandler);
         root.appendChild(document.createTextNode(dirs[i]));
-        root.appendChild(document.createTextNode("\\"));
+        root.appendChild(document.createTextNode("/"));
         htmlPath.appendChild(root);
     }
 }

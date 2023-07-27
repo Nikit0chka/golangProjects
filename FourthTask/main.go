@@ -34,7 +34,7 @@ func hostServ() {
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	fmt.Println("Server is listening...")
 
-	err := http.ListenAndServe("localhost:8080", nil)
+	err := http.ListenAndServe("localhost:8081", nil)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Error by trying listen serv : %s", err))
 	}

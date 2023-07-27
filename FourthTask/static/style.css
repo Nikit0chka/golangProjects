@@ -33,6 +33,7 @@ body {
 
 .root{
     cursor: pointer;
+    font-size: 19px;
 }
 
 /* Стили для списка папок/файлов */

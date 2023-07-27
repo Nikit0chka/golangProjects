@@ -2,7 +2,7 @@
 const url: string = "./"
 
 //структура json ответа
-export class JsonResponse {
+class JsonResponse {
     public name: string;
     public fileOrder: number;
     public path: string;

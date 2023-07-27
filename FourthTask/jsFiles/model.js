@@ -10,7 +10,7 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
 //url сервера
 const url = "./";
 //структура json ответа
-export class JsonResponse {
+class JsonResponse {
     constructor(name, fileOrder, path, size, type) {
         this.name = name;
         this.fileOrder = fileOrder;

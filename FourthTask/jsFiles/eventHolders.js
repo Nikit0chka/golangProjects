@@ -13,7 +13,7 @@ import { addRootToHtml, addTimerToHtml, addFilesToHtml } from "./draw";
 const asc = "ASC";
 const desk = "DESK";
 //текущий путь и сортировка
-let currentPath = '\\';
+let currentPath = '/';
 let currentSort = asc;
 const firstPathIndex = 0;
 //buttonCLickHandler обработчик события нажатия на кнопку
@@ -54,7 +54,7 @@ function buttonClickHandler() {
 window.onload = function () {
     return __awaiter(this, void 0, void 0, function* () {
         let startTime = new Date();
-        let data = yield sendJsonRequest("\\", currentSort);
+        let data = yield sendJsonRequest("/", currentSort);
         addFilesToHtml(data, folderClickHandler);
         addRootToHtml(data[firstPathIndex].path, rootClickHandler);
         addTimerToHtml(new Date().getTime() - startTime.getTime() / 1000);
