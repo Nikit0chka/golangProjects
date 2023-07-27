@@ -14,11 +14,11 @@ import (
 
 // FileInfo структура для работы с файлами и директориями
 type FileInfo struct {
-	Name      string
-	FileOrder int
-	Path      string
-	Size      float32
-	Type      string
+	Name      string  `json:"name"`
+	FileOrder int     `json:"fileOrder"`
+	Path      string  `json:"path"`
+	Size      float32 `json:"size"`
+	Type      string  `json:"type"`
 }
 
 // Типы файлов
@@ -67,12 +67,10 @@ func GetFileInfos(path string) ([]FileInfo, error) {
 				dirPath, err := filepath.Abs(filepath.Join(path, dirName))
 				if err != nil {
 					errCh <- fmt.Errorf("error getting absolute path: %s", err)
-					return
 				}
 				size, err := dirSize(dirPath)
 				if err != nil {
 					errCh <- fmt.Errorf("error getting directory size: %s", err)
-					return
 				}
 
 				// Отправить результат в канал
@@ -89,7 +87,7 @@ func GetFileInfos(path string) ([]FileInfo, error) {
 	}()
 
 	// Считать локальные файлы
-	pathSizes, err := addFiles(path, nil)
+	fileInfos, err := addFiles(path, nil)
 	if err != nil {
 		return nil, fmt.Errorf("error adding local files: %s", err)
 	}
@@ -100,7 +98,7 @@ func GetFileInfos(path string) ([]FileInfo, error) {
 		case res, ok := <-resCh:
 			if !ok {
 				// Канал закрыт, все горутины завершились
-				return append(result, pathSizes...), nil
+				return append(result, fileInfos...), nil
 			}
 			result = append(result, res)
 		case err := <-errCh:
@@ -147,7 +145,7 @@ func addFiles(directory string, pathSizes []FileInfo) ([]FileInfo, error) {
 	}
 
 	for _, file := range files {
-		if !file.IsDir() {
+		if !file.IsDir() && file.Mode().IsRegular() && file.Mode().Perm()&0400 != 0 {
 			pathSizes = append(pathSizes, FileInfo{file.Name(), 0, fmt.Sprintf("%s/%s", directory, file.Name()), roundTo3Digit(file.Size()), fileType})
 		}
 	}

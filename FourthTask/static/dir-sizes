@@ -8,15 +8,13 @@
     <script src="/static/bundle.js"></script>
   </head>
   <body>
-
   <ul class="myCont">
+    <button class="parent-dir-button" id="parentButt">Назад</button>
     <div class="sort-button-container">
-      <div id="currentDir">
-      </div>
+      <div id="currentDir"></div>
       <button class="sort-button" id="sortButt" >Сорт</button>
     </div>
-      <ul class="folder-list" id="folder-list">
-        </ul>
+    <ul class="folder-list" id="folder-list"/>
   </ul>
   </body>
   </html>

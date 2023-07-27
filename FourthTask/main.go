@@ -9,15 +9,6 @@ import (
 	"net/http"
 )
 
-// ResponseJson структура json ответа
-type ResponseJson struct {
-	Name      string  `json:"name"`
-	FileOrder int     `json:"fileOrder"`
-	Path      string  `json:"path"`
-	Size      float32 `json:"size"`
-	Type      string  `json:"type"`
-}
-
 // RequestJson структура json запроса
 type RequestJson struct {
 	Path     string `json:"path"`
@@ -55,34 +46,12 @@ func fileWorkHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Error by reading directories %s", err), 2)
 	}
 
-	//создаем ответный json
-	responseJson, err := createResponse(directories)
-	if err != nil {
-		http.Error(w, fmt.Sprintf("Error by creating json %s", err), 3)
-	}
-
 	//возвращаем json
 	w.Header().Set("Content-Type", "application/json")
-	err = json.NewEncoder(w).Encode(responseJson)
+	err = json.NewEncoder(w).Encode(directories)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error by responding json %s", err), 4)
 	}
-}
-
-// createResponse создает json для ответа
-func createResponse(directories []flWrk.FileInfo) ([]ResponseJson, error) {
-	var bodies []ResponseJson
-
-	if len(directories) == 0 {
-		bodies = append(bodies, ResponseJson{"", 0, "", 0, ""})
-		return bodies, nil
-	}
-
-	for _, value := range directories {
-		bodies = append(bodies, ResponseJson{value.Name, value.FileOrder, value.Path, value.Size, value.Type})
-	}
-
-	return bodies, nil
 }
 
 // decodeRequest декодирует запрос в RequestJson

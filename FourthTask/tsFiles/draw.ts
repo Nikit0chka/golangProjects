@@ -1,27 +1,27 @@
+enum FileTypes{
+    file = "FILE",
+    dir = "DIR"
+}
+
 //addFilesToHtml добавляет файлы в html
 export function addFilesToHtml(folders) {
-    let folderList = document.querySelector(".folder-list")
+    const folderList = document.querySelector(".folder-list")
     folderList.innerHTML = ""
-    console.log(folders)
 
     for (let i = 0; i < folders.length; i++)
     {
-        //ничего не добавлять, если имя нового файла пустое
-        if (folders[i].name.length === 0)
-            continue
-
         for (let j = 0; j < folders.length; j++)
         {
             if (folders[j].fileOrder === i)
             {
-                let folder = folders[i]
-                let fileSpace = document.createElement("li")
-                let fileNameSpace = document.createElement("li")
-                let fileIcon = document.createElement("img")
+                const folder = folders[i]
+                const fileSpace = document.createElement("li")
+                const fileNameSpace = document.createElement("div")
+                const fileIcon = document.createElement("img")
 
-                folder.type === "DIR" ? fileIcon.src = "/static/dirImage.png" : fileIcon.src = "/static/fileImg.jpg"
+                folder.type === FileTypes.dir || folder.type === undefined ? fileIcon.src = "/static/dirImage.png" : fileIcon.src = "/static/fileImg.jpg"
 
-                let folderSize = document.createElement("span")
+                const folderSize = document.createElement("span")
 
                 fileIcon.className = "file-icon"
 
@@ -48,21 +48,18 @@ export function addFilesToHtml(folders) {
 
 //addRootToHtml добавляет путь от корня в html
 export function addRootToHtml(path){
-// ничего не менять если путь пустой
-    if (path.length === 0)
-        return
+    const dirs = path.split('/')
+    const htmlPath = document.getElementById("currentDir")
 
-    let dirs = path.split('/')
-    let htmlPath = document.getElementById("currentDir")
     htmlPath.innerHTML = ""
 
     //всегда добавляем путь к корню
-    let root = document.createElement("a")
+    const root = document.createElement("a")
     let currentPath = '/'
 
     root.setAttribute("path", currentPath)
     root.className = "root"
-    root.appendChild(document.createTextNode("start:/"))
+    root.appendChild(document.createTextNode("start:"))
 
     htmlPath.appendChild(root)
 
@@ -70,10 +67,7 @@ export function addRootToHtml(path){
 
     for (let i = 1; i < dirs.length; i++)
     {
-        if (dirs[i].length === 0)
-            continue
-
-        let root = document.createElement("a")
+        const root = document.createElement("a")
 
         currentPath += '/' + dirs[i]
 
@@ -88,9 +82,9 @@ export function addRootToHtml(path){
 
 //addTimerToHtml выводит результат работы таймера
 export function addTimerToHtml(result){
-    let timer = document.getElementById("timer")
+    const timer = document.getElementById("timer")
     timer.innerHTML = ""
-    let span = document.createElement("span")
+    const span = document.createElement("span")
     timer.appendChild(span)
     span.appendChild(document.createTextNode(result  + "ms"))
 }
