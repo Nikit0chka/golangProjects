@@ -148,7 +148,7 @@ func addFiles(directory string, pathSizes []FileInfo) ([]FileInfo, error) {
 
 	for _, file := range files {
 		if !file.IsDir() {
-			pathSizes = append(pathSizes, FileInfo{file.Name(), 0, fmt.Sprintf("%s/%s", directory, file.Name()), roundTo3Digit(file.Size()), fileType})
+			pathSizes = append(pathSizes, FileInfo{file.Name(), 0, fmt.Sprintf("%s\\%s", directory, file.Name()), roundTo3Digit(file.Size()), fileType})
 		}
 	}
 	return pathSizes, nil

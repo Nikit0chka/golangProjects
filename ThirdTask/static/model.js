@@ -1,15 +1,8 @@
 //url сервера
 const url = "./"
 
-//типы сортировок
-export const asc = "ASC"
-export const desk = "DESK"
-
-export var currentSort = asc
-export var currentPath = '/'
-
 //структура json ответа
-class JsonResponse{
+export class JsonResponse{
     constructor(name, fileOrder, path, size, type) {
         this.name = name
         this.fileOrder = fileOrder
@@ -38,6 +31,5 @@ export async function sendJsonRequest(path, sortType) {
         body: JSON.stringify(data)
     })
     const json = await response.json()
-
     return json.map(item => new JsonResponse(item.name, item.fileOrder, item.path, item.size, item.type))
 }

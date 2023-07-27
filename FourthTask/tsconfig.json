@@ -1,11 +1,11 @@
 {
   "compilerOptions": {
     "target": "ES6",
-    "outDir": "dist",
+    "outDir": "jsFiles",
     "lib": ["ES2015", "DOM"]
   },
   "include": [
-    "/**/*.ts"
+    "tsFiles/*.ts"
   ],
   "exclude": [
     "node_modules",

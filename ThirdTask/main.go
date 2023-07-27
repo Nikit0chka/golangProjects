@@ -6,7 +6,6 @@ import (
 	"io"
 	"log"
 	flWrk "mainModule/fileWork"
-	"net"
 	"net/http"
 )
 
@@ -26,16 +25,16 @@ type RequestJson struct {
 }
 
 func main() {
-	hostServ(getIp())
+	hostServ()
 }
 
 // hostServ запускает сервер по ip и порту указанных в конфиге
-func hostServ(ip string) {
+func hostServ() {
 	http.HandleFunc("/", fileWorkHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	fmt.Println("Server is listening...")
 
-	err := http.ListenAndServe(port, nil)
+	err := http.ListenAndServe("localhost:8080", nil)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Error by trying listen serv : %s", err))
 	}
@@ -126,21 +125,4 @@ func getDirectories(startDirectory string, sortType string) ([]flWrk.FileInfo, e
 		return nil, err
 	}
 	return dirSizes, nil
-}
-
-func getIp() string {
-	adres, err := net.InterfaceAddrs()
-	if err != nil {
-		fmt.Println(err)
-		return ""
-	}
-	for _, addr := range adres {
-		if aspnet, ok := addr.(*net.IPNet); ok && !aspnet.IP.IsLoopback() {
-			if aspnet.IP.To4() != nil {
-				fmt.Println("Your IP address is:", aspnet.IP.String())
-				return aspnet.IP.String()
-			}
-		}
-	}
-	return ""
 }

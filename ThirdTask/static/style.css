@@ -35,10 +35,6 @@ body {
     cursor: pointer;
 }
 
-.root {
-    curl: pointer;
-}
-
 /* Стили для списка папок/файлов */
 .folder-list {
     list-style-type: none;

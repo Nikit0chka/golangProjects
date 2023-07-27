@@ -7,15 +7,10 @@ var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, ge
         step((generator = generator.apply(thisArg, _arguments || [])).next());
     });
 };
-import { addRootToHtml, addFilesToHtml, addTimerToHtml } from "./editHtml";
-// типы сортировок
-export const asc = "ASC";
-export const desk = "DESK";
-export let currentSort = asc;
-// url сервера
-export const url = "./";
-// структура json ответа
-class JsonResponse {
+//url сервера
+const url = "./";
+//структура json ответа
+export class JsonResponse {
     constructor(name, fileOrder, path, size, type) {
         this.name = name;
         this.fileOrder = fileOrder;
@@ -32,35 +27,17 @@ class JsonRequest {
     }
 }
 // sendJsonRequest отправляет и обрабатывает json к серверу и от сервера
-function sendJsonRequest(jsonRequest) {
+export function sendJsonRequest(path, sortType) {
     return __awaiter(this, void 0, void 0, function* () {
-        const data = {
-            path: jsonRequest.path,
-            sortType: jsonRequest.sortType,
-        };
+        const data = new JsonRequest(path, sortType);
         const response = yield fetch(url, {
             method: "POST",
             headers: {
-                "Content-Type": "application/json",
+                "Content-Type": "application/json"
             },
-            body: JSON.stringify(data),
+            body: JSON.stringify(data)
         });
         const json = yield response.json();
         return json.map((item) => new JsonResponse(item.name, item.fileOrder, item.path, item.size, item.type));
-    });
-}
-// sendJsonAndUpdateHtml отправляет json и по результатам ответа изменяет html
-export function sendJsonAndUpdateHtml(path) {
-    return __awaiter(this, void 0, void 0, function* () {
-        const start = new Date().getTime();
-        let jsonRequest = new JsonRequest(path, currentSort);
-        yield sendJsonRequest(jsonRequest)
-            .then((data) => {
-            addRootToHtml(data[0].path);
-            addFilesToHtml(data);
-        })
-            .catch((error) => console.error(error));
-        const end = new Date().getTime();
-        addTimerToHtml(end - start);
     });
 }
