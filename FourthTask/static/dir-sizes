@@ -10,6 +10,8 @@
   <body>
   <ul class="myCont">
     <button class="parent-dir-button" id="parentButt">Назад</button>
+    <button class="parent-dir-button" id="directoriesButt">директории</button>
+    <button class="parent-dir-button" id="statisticButt">статистика</button>
     <div class="sort-button-container">
       <div id="currentDir"></div>
       <button class="sort-button" id="sortButt" >Сорт</button>

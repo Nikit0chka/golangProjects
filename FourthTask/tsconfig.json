@@ -1,7 +1,6 @@
 {
   "compilerOptions": {
     "target": "ES6",
-    "outDir": "jsFiles",
     "lib": ["ES2015", "DOM"]
   },
   "include": [
@@ -9,6 +8,5 @@
   ],
   "exclude": [
     "node_modules",
-    "dist"
   ]
 }

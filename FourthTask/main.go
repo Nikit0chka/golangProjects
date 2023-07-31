@@ -1,12 +1,14 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"log"
 	flWrk "mainModule/fileWork"
 	"net/http"
+	"time"
 )
 
 // RequestJson структура json запроса
@@ -15,17 +17,32 @@ type RequestJson struct {
 	SortType string `json:"sortType"`
 }
 
+type PostJson struct {
+	Path        string  `json:"path"`
+	Size        float32 `json:"size"`
+	Seconds     int     `json:"seconds"`
+	DateOfEntry string  `json:"dateOfEntry"`
+}
+
+type GetJson struct {
+	Id          int       `json:"id"`
+	Path        string    `json:"path"`
+	Size        float32   `json:"size"`
+	Seconds     int       `json:"seconds"`
+	DateOfEntry time.Time `json:"dateOfEntry"`
+}
+
 func main() {
 	hostServ()
 }
 
-// hostServ запускает сервер по ip и порту указанных в конфиге
+// hostServ запускает сервер
 func hostServ() {
 	http.HandleFunc("/", fileWorkHandler)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 	fmt.Println("Server is listening...")
 
-	err := http.ListenAndServe("localhost:8081", nil)
+	err := http.ListenAndServe(":8081", nil)
 	if err != nil {
 		log.Fatal(fmt.Sprintf("Error by trying listen serv : %s", err))
 	}
@@ -46,12 +63,56 @@ func fileWorkHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, fmt.Sprintf("Error by reading directories %s", err), 2)
 	}
 
+	err = sendPostToApache(PostJson{Path: "requestJson.Path", Size: 12.32, Seconds: 1, DateOfEntry: "2023-07-31"})
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	//возвращаем json
 	w.Header().Set("Content-Type", "application/json")
 	err = json.NewEncoder(w).Encode(directories)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Error by responding json %s", err), 4)
 	}
+}
+
+func sendGetToApache() ([]GetJson, error) {
+	resp, err := http.Get("http://192.168.1.31:8083/")
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var result []GetJson
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(resp)
+	fmt.Println(result)
+	return result, nil
+}
+
+// send
+func sendPostToApache(postJson PostJson) error {
+	jsonBody, err := json.Marshal(postJson)
+	fmt.Println("slo")
+	if err != nil {
+		return err
+	}
+
+	// Создаем HTTP-запрос
+	resp, err := http.Post("http://192.168.1.31:8083", "application/json", bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return err
+	}
+
+	defer resp.Body.Close()
+
+	// Обрабатываем ответ
+	fmt.Println("Response Status:", resp.Status)
+	return nil
 }
 
 // decodeRequest декодирует запрос в RequestJson
